@@ -789,7 +789,18 @@ function reqCard(r, showActions) {
     pending:  '<span class="status-pill pending">⏳ بانتظار المراجعة</span>',
     approved: '<span class="status-pill approved">✅ تم القبول</span>',
     rejected: '<span class="status-pill rejected">❌ مرفوض</span>',
+    removed:  '<span class="status-pill rejected">🗑️ تمت الإزالة</span>',
   };
+  const actions = showActions
+    ? `<div class="req-actions">
+         <button class="approve-btn" onclick="reviewReq('${r.id}','approved')">✅ قبول ونشر</button>
+         <button class="reject-btn"  onclick="reviewReq('${r.id}','rejected')">❌ رفض</button>
+       </div>`
+    : (r.status === 'approved'
+        ? `<div class="req-actions" style="grid-template-columns:1fr">
+             <button class="reject-btn" onclick="unpublishReq('${r.id}')">🗑️ إزالة من القائمة</button>
+           </div>`
+        : '');
   return `
     <div class="req-card" id="req_${r.id}">
       <div class="rq-name">${r.name} ${statusMap[r.status]}</div>
@@ -800,11 +811,7 @@ function reqCard(r, showActions) {
         👤 ${r.owner} — ${r.contact}<br>
         ${r.desc ? '📝 ' + r.desc : ''}
       </div>
-      ${showActions ? `
-        <div class="req-actions">
-          <button class="approve-btn" onclick="reviewReq('${r.id}','approved')">✅ قبول ونشر</button>
-          <button class="reject-btn"  onclick="reviewReq('${r.id}','rejected')">❌ رفض</button>
-        </div>` : ''}
+      ${actions}
     </div>`;
 }
 
@@ -821,6 +828,25 @@ async function reviewReq(id, status) {
     if (status === 'approved') {
       await loadApprovedPlaces();
     }
+    renderAdminPanel();
+  } catch (err) {
+    alert('حدث خطأ، حاول مرة أخرى.');
+  }
+}
+
+async function unpublishReq(id) {
+  try {
+    const res = await fetch('/api/unpublish', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'x-admin-password': adminPassword},
+      body: JSON.stringify({id})
+    });
+    if (!res.ok) throw new Error();
+    const req = requests.find(r => r.id === id);
+    if (req) req.status = 'removed';
+    const idx = places.findIndex(p => p.id === 'reg_' + id);
+    if (idx !== -1) places.splice(idx, 1);
+    renderFeatured();
     renderAdminPanel();
   } catch (err) {
     alert('حدث خطأ، حاول مرة أخرى.');

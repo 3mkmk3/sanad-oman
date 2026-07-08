@@ -33,3 +33,7 @@ export async function lrangeAll(key) {
 export function lset(key, index, value) {
   return command(['LSET', key, String(index), value]);
 }
+
+export function del(key) {
+  return command(['DEL', key]);
+}
