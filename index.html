@@ -1,0 +1,866 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="theme-color" content="#0f6e5c"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="سند عمان"/>
+<link rel="manifest" href="/manifest.json"/>
+<link rel="apple-touch-icon" href="/icon-192.png"/>
+<title>سند عمان - البريمي</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=El+Messiri:wght@600;700&family=Tajawal:wght@400;500;700;800&display=swap');
+:root{
+  --green:#0f6e5c;--green-deep:#0a5849;--green-lt:#e4f2ed;
+  --gold:#c9973c;--gold-lt:#f8efdd;
+  --red:#c0453f;--rose-bg:#fdefee;--rose-line:#f5d7d5;
+  --ink:#1f2a27;--muted:#71807b;--line:#e6ebe8;
+  --bg:#f5f7f4;--card:#ffffff;--soft:#e4f2ed;
+  --ai:#6d5bd0;--ai-lt:#f1eefb;--ai-line:#e2dcf8;
+  --shadow-sm:0 1px 2px rgba(31,42,39,.04),0 5px 16px rgba(31,42,39,.06);
+  --shadow-md:0 2px 4px rgba(31,42,39,.05),0 14px 30px rgba(31,42,39,.10);
+  font-family:'Tajawal',Tahoma,Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:linear-gradient(180deg,#eef2ee,#f5f7f4);color:var(--ink);min-height:100vh;display:grid;place-items:center;}
+.app{width:min(430px,100%);min-height:100vh;background:var(--bg);position:relative;display:flex;flex-direction:column;}
+:where(button,a,input,select,textarea):focus-visible{outline:2px solid var(--green);outline-offset:2px;border-radius:8px;}
+
+/* ===== الهيدر بالموجة ===== */
+.hero{position:relative;background:linear-gradient(155deg,#0b5346 0%,#0f6e5c 55%,#17836d 100%);color:#fff;padding:22px 18px 54px;flex-shrink:0;overflow:hidden;}
+.hero::before{content:'';position:absolute;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.06);top:-80px;left:-60px;pointer-events:none;}
+.hero::after{content:'';position:absolute;width:130px;height:130px;border-radius:50%;background:radial-gradient(circle,rgba(201,151,60,.28),rgba(201,151,60,0) 70%);top:-24px;left:56px;pointer-events:none;}
+.hero .wave{position:absolute;bottom:-1px;right:0;left:0;width:100%;height:38px;display:block;pointer-events:none;}
+.brand{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;position:relative;z-index:2;}
+.brand h1{font-family:'El Messiri','Tajawal',Tahoma,sans-serif;font-size:26px;font-weight:700;letter-spacing:.2px;}
+.brand p{font-size:12.5px;opacity:.85;margin-top:2px;font-weight:500;}
+.logo{width:48px;height:48px;border-radius:16px;background:rgba(255,255,255,.14);backdrop-filter:blur(6px);display:grid;place-items:center;font-family:'El Messiri',Tahoma,sans-serif;font-weight:700;font-size:22px;border:1px solid rgba(255,255,255,.28);box-shadow:inset 0 1px 0 rgba(255,255,255,.2);}
+.search-wrap{position:relative;z-index:5;}
+.search-ico{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:15px;opacity:.55;pointer-events:none;}
+.search{width:100%;height:46px;border-radius:999px;border:none;padding:0 44px 0 18px;font-size:14px;font-family:inherit;outline:none;color:var(--ink);background:#fff;box-shadow:0 10px 26px rgba(8,52,42,.28);}
+.search::placeholder{color:var(--muted);}
+.search-results{position:absolute;top:54px;right:0;left:0;background:#fff;border-radius:18px;box-shadow:var(--shadow-md);z-index:100;max-height:260px;overflow-y:auto;border:1px solid var(--line);}
+.search-results.hidden{display:none;}
+.s-item{padding:12px 16px;border-bottom:1px solid var(--line);cursor:pointer;transition:background .15s;}
+.s-item:last-child{border-bottom:none;}
+.s-item:hover,.s-item:active{background:var(--soft);}
+.s-item strong{font-size:14px;display:block;}
+.s-item small{color:var(--muted);font-size:12px;}
+
+.content{flex:1;overflow-y:auto;padding:16px 16px 88px;}
+.screen{display:none;}
+.screen.active{display:block;animation:fadeUp .28s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+button,a{font:inherit;border:0;cursor:pointer;text-decoration:none;}
+
+/* ===== شبكة الأقسام ===== */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px;}
+.cat{background:var(--card);border:1px solid rgba(230,235,232,.7);border-radius:20px;padding:14px 13px;text-align:right;display:flex;flex-direction:column;gap:6px;min-height:104px;justify-content:space-between;box-shadow:var(--shadow-sm);transition:transform .15s ease,box-shadow .15s ease;}
+.cat:active{transform:scale(.97);}
+.cat strong{font-size:14px;}
+.cat small{color:var(--muted);font-size:11.5px;}
+.icon{width:40px;height:40px;border-radius:13px;background:var(--soft);display:grid;place-items:center;font-size:19px;}
+.hue-health .icon{background:#e2f2ec;}
+.hue-car .icon{background:#e8eefa;}
+.hue-home .icon{background:var(--gold-lt);}
+.hue-food .icon{background:#fceee6;}
+.hue-gov .icon{background:#eceef5;}
+.emg{grid-column:1/-1;min-height:56px;border-radius:18px;background:linear-gradient(135deg,#fdefee,#fbe4e2);color:#96322d;border:1px solid var(--rose-line);font-weight:800;display:flex;justify-content:space-between;align-items:center;padding:0 16px;font-size:14px;box-shadow:var(--shadow-sm);transition:transform .15s ease;}
+.emg:active{transform:scale(.98);}
+.badge-red{background:var(--red);color:#fff;padding:4px 11px;border-radius:99px;font-size:11px;box-shadow:0 3px 8px rgba(192,69,63,.3);}
+.ai-btn{background:linear-gradient(135deg,#f4f1fc,#ece7fa);border:1px solid var(--ai-line);grid-column:1/-1;flex-direction:row!important;min-height:58px!important;align-items:center!important;gap:11px;justify-content:flex-start;padding:0 14px!important;}
+.ai-btn .icon{background:#e6e0f8;}
+.ai-btn strong{color:var(--ai);}
+.ai-btn small{color:#8d7fd6;}
+.ai-new{margin-right:auto;background:linear-gradient(135deg,var(--ai),#8a76e8);color:#fff;padding:4px 11px;border-radius:99px;font-size:11px;font-weight:700;box-shadow:0 3px 10px rgba(109,91,208,.35);}
+.sec-title{display:flex;justify-content:space-between;align-items:center;margin:18px 2px 10px;}
+.sec-title h2{font-size:17px;font-weight:800;}
+.sec-title small{color:var(--gold);font-size:12px;font-weight:700;}
+
+/* ===== بطاقات الأماكن ===== */
+.place{width:100%;background:var(--card);border:1px solid rgba(230,235,232,.7);border-radius:20px;padding:13px;text-align:right;margin-bottom:10px;display:block;box-shadow:var(--shadow-sm);transition:transform .15s ease,box-shadow .15s ease;}
+.place:active{transform:scale(.985);}
+.row{display:flex;gap:12px;align-items:center;}
+.av{width:46px;height:46px;border-radius:15px;background:linear-gradient(140deg,#e4f2ed,#d5eae2);color:var(--green-deep);display:grid;place-items:center;font-weight:800;font-size:17px;flex-shrink:0;}
+.place strong{font-size:13.5px;display:block;}
+.muted{color:var(--muted);font-size:12px;margin-top:2px;}
+.badge{display:inline-flex;margin-top:8px;padding:4px 10px;border-radius:99px;background:var(--green-lt);color:var(--green-deep);font-size:11px;font-weight:700;}
+.toolbar{display:flex;gap:8px;overflow-x:auto;margin-bottom:12px;scrollbar-width:none;}
+.toolbar::-webkit-scrollbar{display:none;}
+.chip{white-space:nowrap;padding:8px 15px;border-radius:99px;background:#fff;border:1px solid var(--line);font-size:13px;font-weight:500;box-shadow:var(--shadow-sm);transition:all .15s;}
+.chip.active{background:var(--green);color:#fff;border-color:var(--green);box-shadow:0 4px 12px rgba(15,110,92,.28);}
+.backline{display:flex;gap:10px;align-items:center;margin-bottom:14px;}
+.back{width:42px;height:40px;border-radius:13px;background:#fff;border:1px solid var(--line);font-size:17px;display:grid;place-items:center;box-shadow:var(--shadow-sm);transition:transform .15s;}
+.back:active{transform:scale(.93);}
+.backline h2{font-size:18px;font-weight:800;}
+
+/* ===== التفاصيل ===== */
+.d-hero{position:relative;min-height:118px;border-radius:22px;background:linear-gradient(145deg,#0b5346,#17836d);color:#fff;display:flex;flex-direction:column;justify-content:flex-end;padding:18px;margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow-md);}
+.d-hero::before{content:'';position:absolute;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.07);top:-60px;left:-40px;}
+.d-hero::after{content:'';position:absolute;width:90px;height:90px;border-radius:50%;background:rgba(201,151,60,.22);top:-20px;left:64px;}
+.d-hero h2{font-size:21px;margin-bottom:4px;position:relative;font-weight:800;}
+.d-hero .muted{color:rgba(255,255,255,.85);position:relative;}
+.d-card{background:var(--card);border:1px solid rgba(230,235,232,.7);border-radius:20px;padding:14px;box-shadow:var(--shadow-sm);}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px;}
+.info-box{background:#f4f7f5;border-radius:14px;padding:11px;}
+.info-box small{display:block;color:var(--muted);font-size:11px;margin-bottom:3px;}
+.info-box strong{font-size:13px;}
+.actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px;}
+.action{min-height:44px;border-radius:13px;text-decoration:none;display:grid;place-items:center;font-weight:800;font-size:12px;background:#f0f3f1;color:var(--ink);transition:transform .15s;}
+.action:active{transform:scale(.96);}
+.action.call{background:var(--green);color:#fff;box-shadow:0 4px 12px rgba(15,110,92,.25);}
+.action.map-btn{background:var(--gold);color:#fff;box-shadow:0 4px 12px rgba(201,151,60,.3);}
+.action.wa{background:#1fa855;color:#fff;box-shadow:0 4px 12px rgba(31,168,85,.25);}
+
+/* ===== التنبيهات ===== */
+.alert-box{background:#fdf8ec;border:1px solid #f0e2bd;border-radius:17px;padding:14px;margin-bottom:10px;box-shadow:var(--shadow-sm);}
+.alert-box.info{background:#eef4fb;border-color:#d4e3f5;}
+.alert-box.warn{background:#fdf4ec;border-color:#f2ddc4;}
+.alert-box strong{font-size:14px;display:block;margin-bottom:3px;}
+.alert-box .muted{color:var(--muted);font-size:12px;line-height:1.5;margin-top:0;}
+.ep{background:var(--card);border:1px solid rgba(230,235,232,.7);border-radius:17px;padding:13px;margin-bottom:10px;box-shadow:var(--shadow-sm);}
+
+/* ===== الذكاء الاصطناعي ===== */
+.ai-intro{text-align:center;padding:14px 0 18px;}
+.ai-icon-big{width:74px;height:74px;margin:0 auto 10px;border-radius:24px;background:linear-gradient(135deg,var(--ai-lt),#e6e0f8);display:grid;place-items:center;font-size:36px;box-shadow:var(--shadow-sm);}
+.ai-intro h3{font-size:19px;margin-bottom:5px;font-weight:800;}
+.ai-intro p{color:var(--muted);font-size:13px;}
+.form-group{margin-bottom:18px;}
+.form-group label{display:block;font-weight:700;font-size:14px;margin-bottom:9px;}
+.days-row,.trip-row{display:flex;gap:8px;}
+.day-btn,.trip-btn{flex:1;padding:10px 0;border-radius:13px;background:#fff;border:1.5px solid var(--line);font-size:13px;font-weight:700;box-shadow:var(--shadow-sm);transition:all .15s;}
+.day-btn.active,.trip-btn.active{background:var(--green);color:#fff;border-color:var(--green);box-shadow:0 4px 12px rgba(15,110,92,.28);}
+.int-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.int-btn{padding:12px 7px;border-radius:13px;background:#fff;border:1.5px solid var(--line);font-size:13px;text-align:center;box-shadow:var(--shadow-sm);transition:all .15s;}
+.int-btn.active{background:var(--ai-lt);border-color:var(--ai);color:var(--ai);font-weight:700;box-shadow:0 4px 12px rgba(109,91,208,.18);}
+.gen-btn{width:100%;padding:15px;border-radius:16px;background:linear-gradient(135deg,var(--ai),#8a76e8);color:#fff;font-size:16px;font-weight:800;margin-top:6px;box-shadow:0 8px 22px rgba(109,91,208,.32);transition:transform .15s;}
+.gen-btn:active{transform:scale(.98);}
+.ai-result.hidden{display:none;}
+.ai-loading{text-align:center;padding:44px 20px;}
+.spinner{width:42px;height:42px;border:4px solid var(--ai-lt);border-top-color:var(--ai);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 14px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.ai-loading p{color:var(--muted);font-size:13px;}
+.day-card{background:var(--card);border:1px solid rgba(230,235,232,.7);border-radius:20px;padding:16px;margin-bottom:11px;box-shadow:var(--shadow-sm);}
+.day-title{font-size:15px;font-weight:800;color:var(--green-deep);margin-bottom:11px;padding-bottom:10px;border-bottom:1px dashed var(--line);}
+.activity{display:flex;gap:12px;align-items:flex-start;margin-bottom:10px;}
+.activity:last-child{margin-bottom:0;}
+.act-time{font-size:11px;color:var(--gold);min-width:46px;padding-top:2px;font-weight:800;}
+.act-body strong{font-size:13px;display:block;}
+.act-body span{font-size:12px;color:var(--muted);}
+.back-btn{width:100%;padding:13px;border-radius:14px;background:#fff;border:1.5px solid var(--line);font-size:14px;font-weight:700;margin-top:8px;box-shadow:var(--shadow-sm);}
+
+/* ===== المزيد ===== */
+.more-list{background:var(--card);border-radius:20px;border:1px solid rgba(230,235,232,.7);overflow:hidden;box-shadow:var(--shadow-sm);}
+.more-item{display:flex;gap:13px;align-items:center;padding:16px;border-bottom:1px solid var(--line);font-size:21px;transition:background .15s;}
+.more-item:hover{background:#fafcfa;}
+.more-item:last-child{border-bottom:none;}
+.more-item div strong{display:block;font-size:14px;}
+.more-item div small{color:var(--muted);font-size:12px;}
+
+/* ===== شريط التنقل ===== */
+.nav{position:sticky;bottom:0;background:rgba(255,255,255,.92);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:7px 5px calc(7px + env(safe-area-inset-bottom));backdrop-filter:blur(14px);flex-shrink:0;box-shadow:0 -6px 24px rgba(31,42,39,.05);}
+.nav-btn{border-radius:14px;background:transparent;color:var(--muted);font-size:10px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;transition:all .15s;}
+.nav-btn span{font-size:9px;}
+.nav-btn.active{background:var(--soft);color:var(--green-deep);}
+.nav-ai{color:var(--ai)!important;}
+.nav-ai.active{background:var(--ai-lt)!important;color:var(--ai)!important;}
+.no-res{text-align:center;padding:35px 20px;color:var(--muted);}
+
+/* ===== تسجيل النشاط ===== */
+.reg-hero{position:relative;background:linear-gradient(145deg,#0b5346,#17836d);border-radius:20px;padding:22px 20px;color:#fff;margin-bottom:16px;text-align:center;overflow:hidden;box-shadow:var(--shadow-md);}
+.reg-hero::before{content:'';position:absolute;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.07);top:-50px;right:-40px;}
+.reg-hero::after{content:'';position:absolute;width:100px;height:100px;border-radius:50%;background:rgba(201,151,60,.2);bottom:-40px;left:-20px;}
+.reg-hero .rh-icon{font-size:38px;margin-bottom:8px;position:relative;}
+.reg-hero h3{font-size:18px;font-weight:800;margin-bottom:4px;position:relative;}
+.reg-hero p{font-size:12px;opacity:.88;position:relative;}
+.field-group{margin-bottom:14px;}
+.field-group label{display:block;font-size:13px;font-weight:700;margin-bottom:6px;color:var(--ink);}
+.field-group input,.field-group select,.field-group textarea{width:100%;padding:12px 14px;border-radius:13px;border:1.5px solid var(--line);font:inherit;font-size:13px;color:var(--ink);background:#fff;outline:none;transition:border .2s,box-shadow .2s;}
+.field-group input:focus,.field-group select:focus,.field-group textarea:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(15,110,92,.1);}
+.field-group textarea{resize:vertical;min-height:80px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.submit-btn{width:100%;padding:14px;border-radius:15px;background:linear-gradient(135deg,#0b5346,#17836d);color:#fff;font-size:15px;font-weight:800;margin-top:6px;box-shadow:0 8px 22px rgba(15,110,92,.28);transition:transform .15s;}
+.submit-btn:active{transform:scale(.98);}
+.free-badge{display:inline-block;background:var(--gold-lt);color:#8a6420;border:1px solid #ecd9ac;border-radius:99px;font-size:11px;font-weight:700;padding:4px 12px;margin-bottom:12px;}
+.success-box{text-align:center;padding:32px 20px;}
+.success-box .s-icon{font-size:52px;margin-bottom:12px;}
+.success-box h3{font-size:19px;font-weight:800;margin-bottom:6px;color:var(--green);}
+.success-box p{font-size:13px;color:var(--muted);line-height:1.6;}
+
+/* ===== لوحة التحكم ===== */
+.admin-login{padding:20px 0;}
+.admin-login .al-icon{font-size:44px;text-align:center;margin-bottom:10px;}
+.admin-login h3{text-align:center;font-size:18px;margin-bottom:4px;font-weight:800;}
+.admin-login p{text-align:center;font-size:13px;color:var(--muted);margin-bottom:18px;}
+.admin-panel{display:none;}
+.panel-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:16px;}
+.stat-card{background:var(--card);border:1px solid rgba(230,235,232,.7);border-radius:16px;padding:13px;text-align:center;box-shadow:var(--shadow-sm);}
+.stat-card .sn{font-size:22px;font-weight:800;color:var(--green);}
+.stat-card .sl{font-size:11px;color:var(--muted);margin-top:2px;}
+.req-card{background:var(--card);border:1px solid rgba(230,235,232,.7);border-radius:17px;padding:14px;margin-bottom:10px;box-shadow:var(--shadow-sm);}
+.req-card .rq-name{font-size:15px;font-weight:800;margin-bottom:3px;}
+.req-card .rq-meta{font-size:12px;color:var(--muted);margin-bottom:8px;}
+.req-card .rq-detail{font-size:12px;color:var(--ink);margin-bottom:10px;line-height:1.6;background:#f4f7f5;border-radius:12px;padding:10px;}
+.req-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.approve-btn{padding:10px;border-radius:12px;background:var(--green);color:#fff;font-size:13px;font-weight:800;box-shadow:0 4px 12px rgba(15,110,92,.22);}
+.reject-btn{padding:10px;border-radius:12px;background:var(--rose-bg);color:#96322d;font-size:13px;font-weight:800;border:1px solid var(--rose-line);}
+.status-pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700;}
+.status-pill.pending{background:#fdf3dc;color:#8a6420;}
+.status-pill.approved{background:var(--green-lt);color:var(--green-deep);}
+.status-pill.rejected{background:var(--rose-bg);color:#96322d;}
+.admin-pass{width:100%;padding:12px 14px;border-radius:13px;border:1.5px solid var(--line);font:inherit;font-size:13px;outline:none;margin-bottom:10px;transition:border .2s,box-shadow .2s;}
+.admin-pass:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(15,110,92,.1);}
+.login-btn{width:100%;padding:13px;border-radius:14px;background:var(--green);color:#fff;font-size:14px;font-weight:800;box-shadow:0 4px 14px rgba(15,110,92,.25);}
+.section-label{font-size:14px;font-weight:800;margin:14px 0 8px;color:var(--ink);}
+.empty-req{text-align:center;padding:30px;color:var(--muted);font-size:13px;}
+
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;}}
+@media(min-width:520px){.app{min-height:844px;border-radius:40px;box-shadow:0 34px 100px rgba(11,50,40,.22);margin:28px 0;overflow:hidden;}}
+</style>
+</head>
+<body>
+<main class="app">
+  <header class="hero">
+    <div class="brand">
+      <div><h1>سند عمان</h1><p>دليلك الذكي في البريمي</p></div>
+      <div class="logo">س</div>
+    </div>
+    <div class="search-wrap">
+      <span class="search-ico">🔍</span>
+      <input id="SI" class="search" type="search" placeholder="ابحث عن خدمة أو مكان..." autocomplete="off"/>
+      <div id="SR" class="search-results hidden"></div>
+    </div>
+    <svg class="wave" viewBox="0 0 430 44" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0,20 C70,44 150,2 235,14 C315,25 375,40 430,12 L430,44 L0,44 Z" fill="rgba(255,255,255,.22)"/>
+      <path d="M0,30 C85,46 175,10 260,20 C340,29 392,40 430,22 L430,44 L0,44 Z" style="fill:var(--bg)"/>
+    </svg>
+  </header>
+
+  <section class="content">
+
+    <!-- الرئيسية -->
+    <div id="home" class="screen active">
+      <div class="grid">
+        <button class="emg" onclick="goScreen('emergency')"><span>🆘 الطوارئ</span><span class="badge-red">اتصال سريع</span></button>
+        <button class="cat hue-health" onclick="goCat('الصحة')"><span class="icon">🏥</span><strong>الصحة</strong><small>صيدليات وعيادات</small></button>
+        <button class="cat hue-car" onclick="goCat('السيارات')"><span class="icon">🚗</span><strong>السيارات</strong><small>ونش وكراج وبنشر</small></button>
+        <button class="cat hue-home" onclick="goCat('خدمات المنزل')"><span class="icon">🏠</span><strong>خدمات المنزل</strong><small>تكييف وسباكة وكهرباء</small></button>
+        <button class="cat hue-food" onclick="goCat('المطاعم والمقاهي')"><span class="icon">🍽️</span><strong>المطاعم</strong><small>أماكن قريبة ومجربة</small></button>
+        <button class="cat hue-gov" onclick="goCat('جهات مهمة')"><span class="icon">🏛️</span><strong>جهات مهمة</strong><small>بنوك ودوائر وخدمات</small></button>
+        <button class="cat ai-btn" onclick="goScreen('ai')"><span class="icon">🤖</span><strong>جدولي السياحي</strong><small>ذكاء اصطناعي يخطط لك</small><span class="ai-new">جديد</span></button>
+      </div>
+      <div class="sec-title"><h2>الأكثر احتياجاً اليوم</h2><small>البريمي</small></div>
+      <div id="featuredList"></div>
+    </div>
+
+    <!-- الفئة -->
+    <div id="category" class="screen">
+      <div class="backline"><button class="back" onclick="goScreen('home')">→</button><h2 id="catTitle">الخدمات</h2></div>
+      <div class="toolbar">
+        <button class="chip active" onclick="setFilter('all',this)">الكل</button>
+        <button class="chip" onclick="setFilter('موثق',this)">موثق</button>
+        <button class="chip" onclick="setFilter('متاح',this)">متاح الآن</button>
+      </div>
+      <div id="placesList"></div>
+    </div>
+
+    <!-- التفاصيل -->
+    <div id="detail" class="screen">
+      <div class="backline"><button class="back" onclick="goScreen('category')">→</button><h2>تفاصيل المكان</h2></div>
+      <div id="detailContent"></div>
+    </div>
+
+    <!-- الطوارئ -->
+    <div id="emergency" class="screen">
+      <div class="backline"><button class="back" onclick="goScreen('home')">→</button><h2>الطوارئ</h2></div>
+      <div class="alert-box warn"><strong>⚠️ للحالات الخطيرة</strong><div class="muted">اتصل مباشرة بالجهات الرسمية ولا تعتمد على التطبيق كبديل.</div></div>
+      <div id="emergencyList"></div>
+    </div>
+
+    <!-- الذكاء الاصطناعي -->
+    <div id="ai" class="screen">
+      <div class="backline"><button class="back" onclick="goScreen('home')">→</button><h2>🤖 جدولي السياحي</h2></div>
+      <div id="aiForm">
+        <div class="ai-intro">
+          <div class="ai-icon-big">🤖</div>
+          <h3>خطط رحلتك في البريمي</h3>
+          <p>أخبرني عن نفسك وأبني لك جدول مخصص</p>
+        </div>
+        <div class="form-group">
+          <label>كم يوم عندك؟</label>
+          <div class="days-row">
+            <button class="day-btn active" onclick="setDays(1,this)">يوم</button>
+            <button class="day-btn" onclick="setDays(2,this)">يومين</button>
+            <button class="day-btn" onclick="setDays(3,this)">3 أيام</button>
+            <button class="day-btn" onclick="setDays(5,this)">أسبوع</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>شو اهتماماتك؟ (اختر أكثر من واحد)</label>
+          <div class="int-grid">
+            <button class="int-btn" onclick="toggleInt('تاريخ وتراث',this)">🏰 تاريخ وتراث</button>
+            <button class="int-btn" onclick="toggleInt('طبيعة وجبال',this)">🏔️ طبيعة وجبال</button>
+            <button class="int-btn" onclick="toggleInt('مطاعم وأكل',this)">🍽️ مطاعم وأكل</button>
+            <button class="int-btn" onclick="toggleInt('تسوق',this)">🛍️ تسوق</button>
+            <button class="int-btn" onclick="toggleInt('عائلة وأطفال',this)">👨‍👩‍👧 عائلة</button>
+            <button class="int-btn" onclick="toggleInt('استراحة وهدوء',this)">☕ استراحة</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>نوع الرحلة</label>
+          <div class="trip-row">
+            <button class="trip-btn active" onclick="setTrip('عائلة',this)">👨‍👩‍👧 عائلة</button>
+            <button class="trip-btn" onclick="setTrip('أصدقاء',this)">👫 أصدقاء</button>
+            <button class="trip-btn" onclick="setTrip('منفرد',this)">🧍 منفرد</button>
+          </div>
+        </div>
+        <button class="gen-btn" onclick="generatePlan()">✨ ابني جدولي</button>
+      </div>
+      <div id="aiResult" class="ai-result hidden">
+        <div id="aiLoading" class="ai-loading" style="display:none">
+          <div class="spinner"></div>
+          <p>الذكاء الاصطناعي يخطط رحلتك...</p>
+        </div>
+        <div id="aiPlan"></div>
+        <button class="back-btn" onclick="resetAI()">↩️ خطط من جديد</button>
+      </div>
+    </div>
+
+    <!-- التنبيهات -->
+    <div id="alerts" class="screen">
+      <div class="backline"><button class="back" onclick="goScreen('home')">→</button><h2>تنبيهات البريمي</h2></div>
+      <div class="alert-box warn"><strong>🌧️ تنبيه أمطار</strong><div class="muted">في وقت الأمطار، تجنب عبور الأودية وتابع الجهات الرسمية.</div></div>
+      <div class="alert-box info"><strong>📱 تحديث التطبيق</strong><div class="muted">قائمة الخدمات تجريبية وسيتم توثيق المزودين قبل الإطلاق الرسمي.</div></div>
+    </div>
+
+    <!-- المزيد -->
+    <div id="more" class="screen">
+      <div class="backline"><button class="back" onclick="goScreen('home')">→</button><h2>المزيد</h2></div>
+      <div class="more-list">
+        <div class="more-item" onclick="goScreen('register')" style="cursor:pointer">
+          <span>🏪</span>
+          <div><strong>سجّل نشاطك التجاري</strong><small>أضف محلك أو خدمتك في التطبيق — مجاناً الآن</small></div>
+          <span style="color:var(--green);font-size:18px">›</span>
+        </div>
+        <div class="more-item" onclick="goScreen('admin')" style="cursor:pointer">
+          <span>⚙️</span>
+          <div><strong>لوحة التحكم</strong><small>مراجعة طلبات التسجيل</small></div>
+          <span style="color:var(--muted);font-size:18px">›</span>
+        </div>
+        <div class="more-item"><span>📲</span><div><strong>ثبّت التطبيق</strong><small>اضغط "إضافة للشاشة الرئيسية" من المتصفح</small></div></div>
+        <div class="more-item"><span>📍</span><div><strong>البريمي، سلطنة عُمان</strong><small>نسخة 1.0 — تجريبية</small></div></div>
+      </div>
+    </div>
+
+    <!-- تسجيل النشاط -->
+    <div id="register" class="screen">
+      <div class="backline"><button class="back" onclick="goScreen('more')">→</button><h2>تسجيل نشاط تجاري</h2></div>
+
+      <div id="regForm">
+        <div class="reg-hero">
+          <div class="rh-icon">🏪</div>
+          <h3>سجّل نشاطك في سند عمان</h3>
+          <p>يصل لآلاف المستخدمين في البريمي والمناطق المجاورة</p>
+        </div>
+
+        <div style="text-align:center;margin-bottom:16px">
+          <span class="free-badge">✅ مجاني تماماً في المرحلة الأولى</span>
+        </div>
+
+        <div class="field-group">
+          <label>اسم النشاط التجاري *</label>
+          <input id="f_name" type="text" placeholder="مثال: صيدلية النور، كراج الأمانة..."/>
+        </div>
+
+        <div class="field-row">
+          <div class="field-group">
+            <label>نوع النشاط *</label>
+            <select id="f_cat">
+              <option value="">-- اختر --</option>
+              <option>الصحة</option>
+              <option>السيارات</option>
+              <option>المطاعم والمقاهي</option>
+              <option>خدمات المنزل</option>
+              <option>جهات مهمة</option>
+              <option>السياحة والترفيه</option>
+              <option>أخرى</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label>التخصص *</label>
+            <input id="f_type" type="text" placeholder="مثال: صيدلية، كراج..."/>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label>المنطقة داخل البريمي *</label>
+          <input id="f_area" type="text" placeholder="مثال: وسط البريمي، الصريمي، محيضة..."/>
+        </div>
+
+        <div class="field-row">
+          <div class="field-group">
+            <label>رقم الهاتف *</label>
+            <input id="f_phone" type="tel" placeholder="9XXXXXXX"/>
+          </div>
+          <div class="field-group">
+            <label>واتساب</label>
+            <input id="f_wa" type="tel" placeholder="9XXXXXXX"/>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label>ساعات العمل *</label>
+          <input id="f_hours" type="text" placeholder="مثال: 8ص-10م، 24 ساعة..."/>
+        </div>
+
+        <div class="field-group">
+          <label>رابط الموقع على Google Maps</label>
+          <input id="f_map" type="url" placeholder="https://maps.google.com/..."/>
+        </div>
+
+        <div class="field-group">
+          <label>وصف النشاط</label>
+          <textarea id="f_desc" placeholder="اكتب وصفاً مختصراً عن خدماتك..."></textarea>
+        </div>
+
+        <div class="field-group">
+          <label>اسم صاحب النشاط *</label>
+          <input id="f_owner" type="text" placeholder="الاسم الكامل"/>
+        </div>
+
+        <div class="field-group">
+          <label>رقم التواصل الخاص بك *</label>
+          <input id="f_contact" type="tel" placeholder="للتواصل معك بعد المراجعة"/>
+        </div>
+
+        <button class="submit-btn" onclick="submitRequest()">📨 إرسال طلب التسجيل</button>
+        <p style="text-align:center;font-size:12px;color:var(--muted);margin-top:10px">سيتم مراجعة طلبك خلال 24-48 ساعة</p>
+      </div>
+
+      <div id="regSuccess" class="success-box" style="display:none">
+        <div class="s-icon">🎉</div>
+        <h3>تم إرسال طلبك!</h3>
+        <p>شكراً لك! سنراجع بياناتك خلال 24-48 ساعة وسنتواصل معك على الرقم المسجّل.</p>
+        <button class="submit-btn" style="margin-top:20px" onclick="goScreen('home')">العودة للرئيسية</button>
+      </div>
+    </div>
+
+    <!-- لوحة التحكم -->
+    <div id="admin" class="screen">
+      <div class="backline"><button class="back" onclick="goScreen('more')">→</button><h2>⚙️ لوحة التحكم</h2></div>
+
+      <div id="adminLogin" class="admin-login">
+        <div class="al-icon">🔐</div>
+        <h3>تسجيل دخول المشرف</h3>
+        <p>أدخل كلمة المرور للوصول للوحة التحكم</p>
+        <input id="adminPass" class="admin-pass" type="password" placeholder="كلمة المرور"/>
+        <button class="login-btn" onclick="adminLogin()">دخول</button>
+        <p id="loginErr" style="color:#dc2626;font-size:12px;text-align:center;margin-top:8px;display:none">كلمة المرور خاطئة</p>
+      </div>
+
+      <div id="adminPanel" class="admin-panel">
+        <div class="panel-stats">
+          <div class="stat-card"><div class="sn" id="statTotal">0</div><div class="sl">إجمالي الطلبات</div></div>
+          <div class="stat-card"><div class="sn" id="statPending" style="color:#b07a24">0</div><div class="sl">بانتظار المراجعة</div></div>
+          <div class="stat-card"><div class="sn" id="statApproved">0</div><div class="sl">تم القبول</div></div>
+        </div>
+
+        <div class="section-label">🕐 طلبات بانتظار المراجعة</div>
+        <div id="pendingList"></div>
+
+        <div class="section-label">✅ طلبات تمت مراجعتها</div>
+        <div id="reviewedList"></div>
+      </div>
+    </div>
+
+  </section>
+
+  <nav class="nav">
+    <button class="nav-btn active" onclick="goScreen('home')">🏠<span>الرئيسية</span></button>
+    <button class="nav-btn" onclick="goCat('الصحة')">🔍<span>الخدمات</span></button>
+    <button class="nav-btn nav-ai" onclick="goScreen('ai')">🤖<span>جدولي</span></button>
+    <button class="nav-btn" onclick="goScreen('alerts')">🔔<span>تنبيهات</span></button>
+    <button class="nav-btn" onclick="goScreen('more')">⋯<span>المزيد</span></button>
+  </nav>
+</main>
+
+<script>
+// ===== البيانات =====
+const places = [
+  {id:1,name:'Al Buraimi Medical Center',cat:'الصحة',type:'مستشفى',area:'البريمي',hours:'24 ساعة',phone:'25650000',wa:'25650000',status:'✅ مفتوح',map:'https://maps.google.com/?q=Al+Buraimi+Medical+Center',desc:'مستشفى رئيسي يقدم خدمات طارئة وتخصصية على مدار الساعة.'},
+  {id:2,name:'Orchid Dental Clinic',cat:'الصحة',type:'عيادة أسنان',area:'البريمي',hours:'9ص-9م',phone:'25651000',wa:'25651000',status:'✅ مفتوح',map:'https://maps.google.com/?q=Orchid+Dental+Clinic+Buraimi',desc:'عيادة أسنان متخصصة بأحدث المعدات.'},
+  {id:3,name:'Al Shifa Clinic',cat:'الصحة',type:'عيادة خاصة',area:'البريمي',hours:'8ص-10م',phone:'25652000',wa:'25652000',status:'✅ مفتوح',map:'https://maps.google.com/?q=Al+Shifa+Clinic+Buraimi',desc:'عيادة خاصة للرعاية الصحية العامة.'},
+  {id:4,name:'مستشفى البريمي الحكومي',cat:'الصحة',type:'مستشفى حكومي',area:'البريمي',hours:'24 ساعة',phone:'25654000',wa:'',status:'✅ مفتوح',map:'https://maps.google.com/?q=Buraimi+Government+Hospital',desc:'المستشفى الحكومي الرئيسي في الولاية.'},
+  {id:5,name:'صيدلية الشفاء',cat:'الصحة',type:'صيدلية',area:'وسط البريمي',hours:'8ص-12م',phone:'92001111',wa:'92001111',status:'✅ مفتوح',map:'https://maps.google.com/?q=Al+Shifa+Pharmacy+Buraimi',desc:'صيدلية شاملة بجميع الأدوية والمستلزمات الطبية.'},
+  {id:6,name:'صيدلية النور',cat:'الصحة',type:'صيدلية',area:'الصريمي',hours:'9ص-11م',phone:'92002222',wa:'92002222',status:'✅ مفتوح',map:'https://maps.google.com/?q=Al+Noor+Pharmacy+Buraimi',desc:'صيدلية في منطقة الصريمي.'},
+  {id:7,name:'مركز صحي الصريمي',cat:'الصحة',type:'مركز صحي',area:'الصريمي',hours:'7ص-3م',phone:'25655000',wa:'',status:'✅ مفتوح',map:'https://maps.google.com/?q=Suraimi+Health+Center',desc:'مركز صحي لسكان منطقة الصريمي.'},
+  {id:8,name:'Precision Auto Center',cat:'السيارات',type:'كراج',area:'المنطقة الصناعية',hours:'7ص-8م',phone:'92221111',wa:'92221111',status:'✅ مفتوح',map:'https://maps.google.com/?q=Precision+Auto+Center+Buraimi',desc:'مركز تصليح سيارات متخصص بأحدث المعدات.'},
+  {id:9,name:'Al Buraimi Tires',cat:'السيارات',type:'إطارات وبنشر',area:'البريمي',hours:'6ص-11م',phone:'92223333',wa:'92223333',status:'✅ مفتوح',map:'https://maps.google.com/?q=Al+Buraimi+Tires',desc:'متخصصون في الإطارات وخدمات البنشر.'},
+  {id:10,name:'ونش البريمي السريع',cat:'السيارات',type:'سحب سيارات',area:'البريمي',hours:'24 ساعة',phone:'91112222',wa:'91112222',status:'✅ متاح الآن',map:'https://maps.google.com/?q=Buraimi+Towing',desc:'خدمة سحب سيارات وإنقاذ طريق متاحة 24 ساعة.'},
+  {id:11,name:'ونش الخليج',cat:'السيارات',type:'سحب سيارات',area:'الصريمي',hours:'24 ساعة',phone:'91113333',wa:'91113333',status:'✅ متاح الآن',map:'https://maps.google.com/?q=Gulf+Towing+Buraimi',desc:'ونش متاح للطوارئ.'},
+  {id:12,name:'محطة وقود OQ',cat:'السيارات',type:'محطة وقود',area:'مدخل البريمي',hours:'24 ساعة',phone:'',wa:'',status:'✅ متاح',map:'https://maps.google.com/?q=OQ+Station+Buraimi',desc:'محطة الوقود الرئيسية على مدخل البريمي.'},
+  {id:13,name:'Reef Restaurant',cat:'المطاعم والمقاهي',type:'مطعم',area:'البريمي',hours:'12م-12ب',phone:'95001111',wa:'95001111',status:'✅ مفتوح',map:'https://maps.google.com/?q=Reef+Restaurant+Buraimi',desc:'مطعم متنوع بأجواء مريحة.'},
+  {id:14,name:'Al Yahar Restaurant',cat:'المطاعم والمقاهي',type:'مطعم عماني',area:'وسط البريمي',hours:'11ص-11م',phone:'95002222',wa:'95002222',status:'✅ مفتوح',map:'https://maps.google.com/?q=Al+Yahar+Restaurant+Buraimi',desc:'أفضل المأكولات العمانية الأصيلة.'},
+  {id:15,name:'Oasis Cafe',cat:'المطاعم والمقاهي',type:'كافيه',area:'البريمي',hours:'7ص-1ب',phone:'95003333',wa:'95003333',status:'✅ مفتوح',map:'https://maps.google.com/?q=Oasis+Cafe+Buraimi',desc:'كافيه هادئ للقهوة والمشروبات.'},
+  {id:16,name:'مطعم البريمي العماني',cat:'المطاعم والمقاهي',type:'مطعم عماني',area:'وسط البريمي',hours:'11ص-11م',phone:'95005555',wa:'95005555',status:'✅ مفتوح',map:'https://maps.google.com/?q=Buraimi+Omani+Restaurant',desc:'مطبخ عماني أصيل بتجربة تقليدية.'},
+  {id:17,name:'مقهى النخيل',cat:'المطاعم والمقاهي',type:'مقهى',area:'وسط البريمي',hours:'7ص-1ب',phone:'95006666',wa:'95006666',status:'✅ مفتوح',map:'https://maps.google.com/?q=Al+Nakheel+Cafe+Buraimi',desc:'مقهى شعبي بأجواء دافئة.'},
+  {id:18,name:'Al Buraimi Plumbing',cat:'خدمات المنزل',type:'سباكة',area:'البريمي',hours:'7ص-9م',phone:'94441111',wa:'94441111',status:'✅ متاح',map:'https://maps.google.com/?q=Al+Buraimi+Plumbing',desc:'خدمات سباكة منزلية احترافية.'},
+  {id:19,name:'Quick Electric Services',cat:'خدمات المنزل',type:'كهرباء',area:'البريمي',hours:'8ص-9م',phone:'94442222',wa:'94442222',status:'✅ متاح',map:'https://maps.google.com/?q=Quick+Electric+Services+Buraimi',desc:'كهربائي منازل ومحلات متخصص.'},
+  {id:20,name:'فني تكييف البريمي',cat:'خدمات المنزل',type:'تصليح تكييف',area:'البريمي',hours:'9ص-9م',phone:'93334444',wa:'93334444',status:'✅ متاح',map:'https://maps.google.com/?q=AC+Repair+Buraimi',desc:'صيانة وتنظيف مكيفات المنازل.'},
+  {id:21,name:'شركة برودة للتكييف',cat:'خدمات المنزل',type:'تكييف وصيانة',area:'البريمي',hours:'8ص-8م',phone:'93335555',wa:'93335555',status:'✅ متاح',map:'https://maps.google.com/?q=Burouda+AC+Buraimi',desc:'متخصصون في تركيب وصيانة التكييف.'},
+  {id:22,name:'Buraimi Municipality',cat:'جهات مهمة',type:'بلدية',area:'البريمي',hours:'7:30ص-2:30م',phone:'25660000',wa:'',status:'✅ مفتوح',map:'https://maps.google.com/?q=Buraimi+Municipality',desc:'بلدية محافظة البريمي.'},
+  {id:23,name:'شرطة البريمي',cat:'جهات مهمة',type:'أمن وشرطة',area:'البريمي',hours:'24 ساعة',phone:'9999',wa:'',status:'✅ دائم',map:'https://maps.google.com/?q=Buraimi+Police',desc:'مركز الشرطة الرئيسي. طوارئ: 9999'},
+  {id:24,name:'بنك مسقط - البريمي',cat:'جهات مهمة',type:'بنك',area:'البريمي',hours:'8ص-2م',phone:'25663000',wa:'',status:'✅ مفتوح',map:'https://maps.google.com/?q=Bank+Muscat+Buraimi',desc:'فرع بنك مسقط في البريمي.'},
+  {id:25,name:'هيئة الكهرباء والمياه',cat:'جهات مهمة',type:'خدمات عامة',area:'البريمي',hours:'7:30ص-2:30م',phone:'25665000',wa:'',status:'✅ مفتوح',map:'https://maps.google.com/?q=Electricity+Buraimi',desc:'خدمات الكهرباء والمياه.'},
+  {id:26,name:'Al Khandaq Fort',cat:'السياحة والترفيه',type:'قلعة تاريخية',area:'البريمي',hours:'8ص-6م',phone:'',wa:'',status:'✅ مفتوح',map:'https://maps.google.com/?q=Al+Khandaq+Fort+Buraimi',desc:'قلعة تاريخية تعود لمئات السنين.'},
+  {id:27,name:'سوق البريمي الشعبي',cat:'السياحة والترفيه',type:'سوق تراثي',area:'وسط البريمي',hours:'8ص-12م | 4م-10م',phone:'',wa:'',status:'✅ مفتوح',map:'https://maps.google.com/?q=Buraimi+Traditional+Market',desc:'السوق الشعبي التقليدي في البريمي.'},
+  {id:28,name:'فلج المسفاة',cat:'السياحة والترفيه',type:'فلج تراثي',area:'البريمي',hours:'طوال اليوم',phone:'',wa:'',status:'✅ متاح',map:'https://maps.google.com/?q=Aflaj+Buraimi',desc:'فلج تراثي موروث وموقع سياحي مميز.'},
+  {id:29,name:'جبل الحفيت',cat:'السياحة والترفيه',type:'جبل سياحي',area:'قرب البريمي',hours:'طوال اليوم',phone:'',wa:'',status:'✅ متاح',map:'https://maps.google.com/?q=Jebel+Hafeet',desc:'جبل الحفيت الشهير، مناظر خلابة.'},
+  {id:30,name:'Oasis Garden Hotel',cat:'السياحة والترفيه',type:'فندق',area:'البريمي',hours:'24 ساعة',phone:'25670000',wa:'25670000',status:'✅ مفتوح',map:'https://maps.google.com/?q=Oasis+Garden+Hotel+Buraimi',desc:'فندق مريح في قلب البريمي.'},
+];
+
+const emergencies = [
+  {name:'الشرطة',phone:'9999',desc:'للحالات الأمنية والطارئة'},
+  {name:'الإسعاف',phone:'9999',desc:'للحالات الصحية العاجلة'},
+  {name:'الدفاع المدني',phone:'9999',desc:'حرائق وإنقاذ وحوادث'},
+];
+
+// ===== الحالة =====
+let currentCat = '';
+let currentFilter = 'all';
+let aiDays = 1;
+let aiTrip = 'عائلة';
+let aiInterests = [];
+
+// ===== التنقل =====
+function goScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const map = {home:0, category:1, ai:2, alerts:3, more:4};
+  if (map[id] !== undefined) document.querySelectorAll('.nav-btn')[map[id]].classList.add('active');
+  closeSR();
+  if (id === 'emergency') renderEmergency();
+}
+
+function goCat(name) {
+  currentCat = name;
+  currentFilter = 'all';
+  document.getElementById('catTitle').textContent = name + ' في البريمي';
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  document.querySelector('.chip').classList.add('active');
+  renderPlaces();
+  goScreen('category');
+}
+
+function renderPlaces() {
+  let list = places.filter(p => p.cat === currentCat);
+  if (currentFilter === 'موثق') list = list.filter(p => p.status.includes('مفتوح'));
+  if (currentFilter === 'متاح') list = list.filter(p => p.status.includes('متاح'));
+  const el = document.getElementById('placesList');
+  el.innerHTML = list.length
+    ? list.map(p => `<button class="place" onclick="goDetail('${p.id}')"><div class="row"><div class="av">${p.name[0]}</div><div><strong>${p.name}</strong><div class="muted">${p.type} — ${p.area}</div></div></div><span class="badge">${p.status}</span></button>`).join('')
+    : '<div class="no-res">لا توجد نتائج</div>';
+}
+
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  renderPlaces();
+}
+
+function goDetail(id) {
+  const p = places.find(x => String(x.id) === String(id));
+  if (!p) return;
+  const waBtn = p.wa ? `<a class="action wa" href="https://wa.me/968${p.wa}">واتساب</a>` : `<span class="action" style="opacity:.35">لا يوجد</span>`;
+  const callBtn = p.phone ? `<a class="action call" href="tel:${p.phone}">${p.phone}</a>` : `<span class="action" style="opacity:.35">لا يوجد</span>`;
+  document.getElementById('detailContent').innerHTML = `
+    <div class="d-hero"><h2>${p.name}</h2><div class="muted">${p.desc}</div></div>
+    <div class="d-card">
+      <span class="badge">${p.status}</span>
+      <div class="info-grid">
+        <div class="info-box"><small>القسم</small><strong>${p.cat}</strong></div>
+        <div class="info-box"><small>النوع</small><strong>${p.type}</strong></div>
+        <div class="info-box"><small>المنطقة</small><strong>${p.area}</strong></div>
+        <div class="info-box"><small>ساعات العمل</small><strong>${p.hours}</strong></div>
+      </div>
+      <div class="actions">${callBtn}${waBtn}<a class="action map-btn" href="${p.map}" target="_blank">الموقع</a></div>
+    </div>`;
+  goScreen('detail');
+}
+
+function renderFeatured() {
+  const feat = [places[9], places[0], places[25], places[13]];
+  document.getElementById('featuredList').innerHTML = feat.map(p =>
+    `<button class="place" onclick="goDetail('${p.id}')"><div class="row"><div class="av">${p.name[0]}</div><div><strong>${p.name}</strong><div class="muted">${p.type} — ${p.area}</div></div></div><span class="badge">${p.status}</span></button>`
+  ).join('');
+}
+
+function renderEmergency() {
+  document.getElementById('emergencyList').innerHTML = emergencies.map(e => `
+    <div class="ep">
+      <div class="row"><div class="av">${e.name[0]}</div><div><strong>${e.name}</strong><div class="muted">${e.desc}</div></div></div>
+      <div class="actions" style="margin-top:10px"><a class="action call" href="tel:${e.phone}">اتصال</a><span class="action">${e.phone}</span><span class="action">رسمي</span></div>
+    </div>`).join('');
+}
+
+// ===== البحث =====
+function closeSR() {
+  document.getElementById('SR').classList.add('hidden');
+  document.getElementById('SI').value = '';
+}
+
+document.getElementById('SI').addEventListener('input', function() {
+  const q = this.value.trim().toLowerCase();
+  const SR = document.getElementById('SR');
+  if (!q) { SR.classList.add('hidden'); return; }
+  const found = places.filter(p =>
+    p.name.toLowerCase().includes(q) || p.type.toLowerCase().includes(q) ||
+    p.cat.toLowerCase().includes(q) || p.area.toLowerCase().includes(q)
+  ).slice(0, 6);
+  SR.innerHTML = found.length
+    ? found.map(p => `<div class="s-item" onclick="goDetail(${p.id});closeSR()"><strong>${p.name}</strong><small>${p.type} — ${p.area}</small></div>`).join('')
+    : '<div class="s-item"><small>لا توجد نتائج</small></div>';
+  SR.classList.remove('hidden');
+});
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.search-wrap')) closeSR();
+});
+
+// ===== الذكاء الاصطناعي =====
+function setDays(n, btn) {
+  aiDays = n;
+  document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function setTrip(t, btn) {
+  aiTrip = t;
+  document.querySelectorAll('.trip-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function toggleInt(v, btn) {
+  btn.classList.toggle('active');
+  aiInterests = aiInterests.includes(v) ? aiInterests.filter(x => x !== v) : [...aiInterests, v];
+}
+
+async function generatePlan() {
+  if (!aiInterests.length) { alert('اختر اهتمام واحد على الأقل!'); return; }
+  document.getElementById('aiForm').style.display = 'none';
+  const result = document.getElementById('aiResult');
+  result.classList.remove('hidden');
+  const loading = document.getElementById('aiLoading');
+  loading.style.display = 'block';
+  document.getElementById('aiPlan').innerHTML = '';
+
+  const tour = places.filter(p => p.cat === 'السياحة والترفيه').map(p => p.name).join('، ');
+  const rest = places.filter(p => p.cat === 'المطاعم والمقاهي').map(p => p.name).join('، ');
+
+  const prompt = `أنت مرشد سياحي خبير في البريمي، سلطنة عُمان.
+المستخدم يريد: مدة الرحلة: ${aiDays} ${aiDays===1?'يوم':'أيام'}، نوع الرحلة: ${aiTrip}، الاهتمامات: ${aiInterests.join('، ')}.
+الأماكن السياحية: ${tour}. المطاعم: ${rest}.
+أجب فقط بـ JSON هكذا بدون أي نص إضافي أو backticks:
+{"title":"عنوان","summary":"جملة تشويقية","days":[{"day":1,"title":"عنوان اليوم","activities":[{"time":"9:00 ص","place":"اسم المكان","desc":"وصف قصير"}]}]}`;
+
+  try {
+    const res = await fetch('/api/plan', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({prompt})
+    });
+    const data = await res.json();
+    const text = data.content.map(i => i.text||'').join('').replace(/```json|```/g,'').trim();
+    const plan = JSON.parse(text);
+    loading.style.display = 'none';
+    document.getElementById('aiPlan').innerHTML = `
+      <div class="day-card" style="background:linear-gradient(135deg,rgba(109,91,208,.08),rgba(15,110,92,.07)),#fff;border-color:#e2dcf8">
+        <div style="font-size:19px;font-weight:800;color:#6d5bd0;margin-bottom:5px">${plan.title}</div>
+        <div style="font-size:13px;color:#6b7280">${plan.summary}</div>
+      </div>
+      ${plan.days.map(d=>`
+        <div class="day-card">
+          <div class="day-title">📅 اليوم ${d.day}: ${d.title}</div>
+          ${d.activities.map(a=>`
+            <div class="activity">
+              <div class="act-time">${a.time}</div>
+              <div class="act-body"><strong>${a.place}</strong><span>${a.desc}</span></div>
+            </div>`).join('')}
+        </div>`).join('')}`;
+  } catch(err) {
+    loading.style.display = 'none';
+    document.getElementById('aiPlan').innerHTML = '<div class="alert-box warn"><strong>⚠️ خطأ في الاتصال</strong><div class="muted">تأكد من اتصال الإنترنت وحاول مرة ثانية.</div></div>';
+  }
+}
+
+function resetAI() {
+  document.getElementById('aiForm').style.display = 'block';
+  document.getElementById('aiResult').classList.add('hidden');
+  aiInterests = [];
+  document.querySelectorAll('.int-btn').forEach(b => b.classList.remove('active'));
+}
+
+// ===== تسجيل الأنشطة =====
+let adminPassword = '';
+let requests = [];
+
+async function submitRequest() {
+  const name    = document.getElementById('f_name').value.trim();
+  const cat     = document.getElementById('f_cat').value;
+  const type    = document.getElementById('f_type').value.trim();
+  const area    = document.getElementById('f_area').value.trim();
+  const phone   = document.getElementById('f_phone').value.trim();
+  const wa      = document.getElementById('f_wa').value.trim();
+  const hours   = document.getElementById('f_hours').value.trim();
+  const map     = document.getElementById('f_map').value.trim();
+  const desc    = document.getElementById('f_desc').value.trim();
+  const owner   = document.getElementById('f_owner').value.trim();
+  const contact = document.getElementById('f_contact').value.trim();
+
+  if (!name || !cat || !type || !area || !phone || !hours || !owner || !contact) {
+    alert('الرجاء تعبئة جميع الحقول الإلزامية (*)');
+    return;
+  }
+
+  const btn = document.querySelector('#regForm .submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'جارِ الإرسال...';
+
+  try {
+    const res = await fetch('/api/submit', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name, cat, type, area, phone, wa, hours, map, desc, owner, contact})
+    });
+    if (!res.ok) throw new Error();
+    document.getElementById('regForm').style.display = 'none';
+    document.getElementById('regSuccess').style.display = 'block';
+  } catch (err) {
+    alert('حدث خطأ أثناء الإرسال. تأكد من اتصال الإنترنت وحاول مرة أخرى.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '📨 إرسال طلب التسجيل';
+  }
+}
+
+// ===== لوحة التحكم =====
+async function adminLogin() {
+  const pass = document.getElementById('adminPass').value;
+  try {
+    const res = await fetch('/api/requests', { headers: {'x-admin-password': pass} });
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    adminPassword = pass;
+    requests = data.requests || [];
+    document.getElementById('adminLogin').style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'block';
+    document.getElementById('loginErr').style.display = 'none';
+    renderAdminPanel();
+  } catch (err) {
+    document.getElementById('loginErr').style.display = 'block';
+    document.getElementById('adminPass').value = '';
+  }
+}
+
+function renderAdminPanel() {
+  const pending  = requests.filter(r => r.status === 'pending');
+  const reviewed = requests.filter(r => r.status !== 'pending');
+
+  document.getElementById('statTotal').textContent   = requests.length;
+  document.getElementById('statPending').textContent  = pending.length;
+  document.getElementById('statApproved').textContent = requests.filter(r => r.status === 'approved').length;
+
+  const pendingEl = document.getElementById('pendingList');
+  pendingEl.innerHTML = pending.length
+    ? pending.map(r => reqCard(r, true)).join('')
+    : '<div class="empty-req">لا توجد طلبات معلقة ✅</div>';
+
+  const reviewedEl = document.getElementById('reviewedList');
+  reviewedEl.innerHTML = reviewed.length
+    ? reviewed.map(r => reqCard(r, false)).join('')
+    : '<div class="empty-req">لا توجد طلبات مراجعة بعد</div>';
+}
+
+function reqCard(r, showActions) {
+  const statusMap = {
+    pending:  '<span class="status-pill pending">⏳ بانتظار المراجعة</span>',
+    approved: '<span class="status-pill approved">✅ تم القبول</span>',
+    rejected: '<span class="status-pill rejected">❌ مرفوض</span>',
+  };
+  return `
+    <div class="req-card" id="req_${r.id}">
+      <div class="rq-name">${r.name} ${statusMap[r.status]}</div>
+      <div class="rq-meta">${r.cat} · ${r.type} · ${r.area} · ${r.date}</div>
+      <div class="rq-detail">
+        📞 ${r.phone}${r.wa ? ' | واتساب: ' + r.wa : ''}<br>
+        🕐 ${r.hours}<br>
+        👤 ${r.owner} — ${r.contact}<br>
+        ${r.desc ? '📝 ' + r.desc : ''}
+      </div>
+      ${showActions ? `
+        <div class="req-actions">
+          <button class="approve-btn" onclick="reviewReq('${r.id}','approved')">✅ قبول ونشر</button>
+          <button class="reject-btn"  onclick="reviewReq('${r.id}','rejected')">❌ رفض</button>
+        </div>` : ''}
+    </div>`;
+}
+
+async function reviewReq(id, status) {
+  try {
+    const res = await fetch('/api/review', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'x-admin-password': adminPassword},
+      body: JSON.stringify({id, status})
+    });
+    if (!res.ok) throw new Error();
+    const req = requests.find(r => r.id === id);
+    if (req) req.status = status;
+    if (status === 'approved') {
+      await loadApprovedPlaces();
+    }
+    renderAdminPanel();
+  } catch (err) {
+    alert('حدث خطأ، حاول مرة أخرى.');
+  }
+}
+
+async function loadApprovedPlaces() {
+  try {
+    const res = await fetch('/api/places');
+    const data = await res.json();
+    const existingIds = new Set(places.map(p => String(p.id)));
+    (data.places || []).forEach(p => {
+      if (!existingIds.has(String(p.id))) places.push(p);
+    });
+    renderFeatured();
+  } catch (err) {}
+}
+
+// إعادة تعيين نموذج التسجيل عند الدخول
+const origGoScreen = goScreen;
+window.goScreen = function(id) {
+  if (id === 'register') {
+    document.getElementById('regForm').style.display = 'block';
+    document.getElementById('regSuccess').style.display = 'none';
+  }
+  if (id === 'admin') {
+    document.getElementById('adminLogin').style.display = 'block';
+    document.getElementById('adminPanel').style.display = 'none';
+    document.getElementById('adminPass').value = '';
+    document.getElementById('loginErr').style.display = 'none';
+  }
+  origGoScreen(id);
+};
+
+// ===== تشغيل =====
+renderFeatured();
+loadApprovedPlaces();
+
+// تسجيل Service Worker (يشتغل فقط على https بعد الرفع)
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
