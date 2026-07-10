@@ -448,6 +448,11 @@ textarea.rv-input{resize:vertical;min-height:58px;}
         </div>
 
         <div class="field-group">
+          <label>رابط صورة النشاط</label>
+          <input id="f_photo" type="url" placeholder="https://... (اختياري — صورة واضحة لمحلك)"/>
+        </div>
+
+        <div class="field-group">
           <label>وصف النشاط</label>
           <textarea id="f_desc" placeholder="اكتب وصفاً مختصراً عن خدماتك..."></textarea>
         </div>
@@ -573,9 +578,10 @@ function shareText(text) {
   }
 }
 
-// صورة المكان من خرائط قوقل (عبر الخادم) — إن لم تتوفر يبقى الحرف الأول
+// صورة المكان: رابط الصورة الخاص بالنشاط إن وُجد، وإلا من خرائط قوقل (عبر الخادم)،
+// وإن لم تتوفر أي صورة يبقى الحرف الأول
 function photoUrl(p) {
-  return '/api/photo?q=' + encodeURIComponent(p.name);
+  return safeUrl(p.photo) || ('/api/photo?q=' + encodeURIComponent(p.name));
 }
 function avatar(p) {
   return `<div class="av">${esc(p.name[0])}<img class="av-img" src="${photoUrl(p)}" alt="" onerror="this.remove()"/></div>`;
@@ -907,6 +913,7 @@ async function submitRequest() {
   const wa      = document.getElementById('f_wa').value.trim();
   const hours   = document.getElementById('f_hours').value.trim();
   const map     = document.getElementById('f_map').value.trim();
+  const photo   = document.getElementById('f_photo').value.trim();
   const desc    = document.getElementById('f_desc').value.trim();
   const owner   = document.getElementById('f_owner').value.trim();
   const contact = document.getElementById('f_contact').value.trim();
@@ -924,7 +931,7 @@ async function submitRequest() {
     const res = await fetch('/api/submit', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({name, cat, type, area, phone, wa, hours, map, desc, owner, contact})
+      body: JSON.stringify({name, cat, type, area, phone, wa, hours, map, photo, desc, owner, contact})
     });
     if (!res.ok) {
       throw new Error(res.status === 429
@@ -1001,6 +1008,7 @@ function reqCard(r, showActions) {
     <div class="req-card" id="req_${esc(r.id)}">
       <div class="rq-name">${esc(r.name)} ${statusMap[r.status] || ''}</div>
       <div class="rq-meta">${esc(r.cat)} · ${esc(r.type)} · ${esc(r.area)} · ${esc(r.date)}</div>
+      ${safeUrl(r.photo) ? `<img src="${esc(r.photo)}" alt="" style="width:100%;max-height:150px;object-fit:cover;border-radius:12px;margin-bottom:8px" onerror="this.remove()"/>` : ''}
       <div class="rq-detail">
         📞 ${esc(r.phone)}${r.wa ? ' | واتساب: ' + esc(r.wa) : ''}<br>
         🕐 ${esc(r.hours)}<br>

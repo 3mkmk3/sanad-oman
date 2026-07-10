@@ -19,9 +19,11 @@ export default async function handler(req, res) {
   const wa      = clean(b.wa, 20);
   const hours   = clean(b.hours, 60);
   const desc    = clean(b.desc, 500);
-  // نقبل روابط الخرائط التي تبدأ بـ http/https فقط
+  // نقبل روابط الخرائط والصور التي تبدأ بـ http/https فقط
   let map = clean(b.map, 300);
   if (map && !/^https?:\/\//i.test(map)) map = '';
+  let photo = clean(b.photo, 300);
+  if (photo && !/^https?:\/\//i.test(photo)) photo = '';
   const owner   = clean(b.owner, 100);
   const contact = clean(b.contact, 20);
 
@@ -40,6 +42,7 @@ export default async function handler(req, res) {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
     name, cat, type, area, phone, wa, hours,
     map: map || 'https://maps.google.com/?q=' + encodeURIComponent(name + ' البريمي'),
+    photo,
     desc: desc || 'نشاط تجاري في البريمي',
     owner, contact,
     status: 'pending',

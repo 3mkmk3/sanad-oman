@@ -30,7 +30,8 @@ export default async function handler(req, res) {
       const place = {
         id: 'reg_' + r.id,
         name: r.name, cat: r.cat, type: r.type, area: r.area, hours: r.hours,
-        phone: r.phone, wa: r.wa || '', status: '✅ موثق', map: r.map, desc: r.desc
+        phone: r.phone, wa: r.wa || '', status: '✅ موثق', map: r.map,
+        photo: r.photo || '', desc: r.desc
       };
       await lpush('sanad:places', JSON.stringify(place));
     }
