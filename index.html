@@ -150,6 +150,32 @@ button,a{font:inherit;border:0;cursor:pointer;text-decoration:none;}
 .act-body strong{font-size:13px;display:block;}
 .act-body span{font-size:12px;color:var(--muted);}
 .back-btn{width:100%;padding:13px;border-radius:14px;background:#fff;border:1.5px solid var(--line);font-size:14px;font-weight:700;margin-top:8px;box-shadow:var(--shadow-sm);}
+.share-btn{width:100%;padding:12px;border-radius:13px;background:var(--green-lt);color:var(--green-deep);border:1px solid #cfe6dd;font-size:13px;font-weight:800;margin-top:10px;transition:transform .15s;}
+.share-btn:active{transform:scale(.98);}
+
+/* ===== صور الأماكن ===== */
+.av{position:relative;overflow:hidden;}
+.av-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit;}
+.d-hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.d-hero-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,63,52,.15),rgba(8,47,38,.85));}
+
+/* ===== التقييمات ===== */
+.rate-badge{background:var(--gold-lt);color:#8a6420;margin-right:6px;}
+.rv-item{border-bottom:1px dashed var(--line);padding:9px 0;}
+.rv-item:last-child{border-bottom:none;}
+.rv-top{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.rv-top strong{font-size:13px;}
+.rv-st{color:var(--gold);font-size:12px;letter-spacing:1.5px;white-space:nowrap;}
+.rv-txt{font-size:12.5px;color:var(--ink);margin:4px 0;line-height:1.6;}
+.rv-form{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);}
+.rv-stars{display:flex;gap:4px;justify-content:center;margin-bottom:10px;}
+.rv-star-btn{font-size:28px;line-height:1;background:none;border:none;color:#d9dfdc;padding:2px 4px;transition:color .15s,transform .1s;}
+.rv-star-btn.active{color:var(--gold);}
+.rv-star-btn:active{transform:scale(1.25);}
+.rv-input{width:100%;padding:10px 12px;border-radius:12px;border:1.5px solid var(--line);font:inherit;font-size:13px;color:var(--ink);background:#fff;outline:none;margin-bottom:8px;transition:border .2s;}
+.rv-input:focus{border-color:var(--green);}
+textarea.rv-input{resize:vertical;min-height:58px;}
+.no-rv{text-align:center;color:var(--muted);font-size:12.5px;padding:12px 0;}
 
 /* ===== المزيد ===== */
 .more-list{background:var(--card);border-radius:20px;border:1px solid rgba(230,235,232,.7);overflow:hidden;box-shadow:var(--shadow-sm);}
@@ -473,6 +499,9 @@ button,a{font:inherit;border:0;cursor:pointer;text-decoration:none;}
 
         <div class="section-label">✅ طلبات تمت مراجعتها</div>
         <div id="reviewedList"></div>
+
+        <div class="section-label">⭐ آخر التقييمات</div>
+        <div id="adminReviews"></div>
       </div>
     </div>
 
@@ -528,6 +557,52 @@ const emergencies = [
   {name:'الدفاع المدني',phone:'9999',desc:'حرائق وإنقاذ وحوادث'},
 ];
 
+// ===== أدوات مساعدة =====
+// تهريب أي نص قبل عرضه داخل الصفحة — يمنع حقن أكواد HTML/JS في بيانات الأنشطة
+function esc(v) {
+  return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function safeUrl(u) {
+  return /^https?:\/\//i.test(u || '') ? u : '';
+}
+function shareText(text) {
+  if (navigator.share) {
+    navigator.share({ text }).catch(() => {});
+  } else {
+    window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+  }
+}
+
+// صورة المكان من خرائط قوقل (عبر الخادم) — إن لم تتوفر يبقى الحرف الأول
+function photoUrl(p) {
+  return '/api/photo?q=' + encodeURIComponent(p.name);
+}
+function avatar(p) {
+  return `<div class="av">${esc(p.name[0])}<img class="av-img" src="${photoUrl(p)}" alt="" onerror="this.remove()"/></div>`;
+}
+
+// ===== التقييمات =====
+let ratingsSummary = {};
+
+function starsBadge(id) {
+  const r = ratingsSummary[String(id)];
+  return r ? `<span class="badge rate-badge">⭐ ${esc(r.avg)} (${esc(r.count)})</span>` : '';
+}
+
+function starsRow(n) {
+  return '★'.repeat(n) + '☆'.repeat(5 - n);
+}
+
+async function loadRatings() {
+  try {
+    const res = await fetch('/api/ratings');
+    const data = await res.json();
+    ratingsSummary = data.summary || {};
+    renderFeatured();
+    if (document.getElementById('category').classList.contains('active')) renderPlaces();
+  } catch (err) {}
+}
+
 // ===== الحالة =====
 let currentCat = '';
 let currentFilter = 'all';
@@ -558,11 +633,11 @@ function goCat(name) {
 
 function renderPlaces() {
   let list = places.filter(p => p.cat === currentCat);
-  if (currentFilter === 'موثق') list = list.filter(p => p.status.includes('مفتوح'));
+  if (currentFilter === 'موثق') list = list.filter(p => p.status.includes('موثق'));
   if (currentFilter === 'متاح') list = list.filter(p => p.status.includes('متاح'));
   const el = document.getElementById('placesList');
   el.innerHTML = list.length
-    ? list.map(p => `<button class="place" onclick="goDetail('${p.id}')"><div class="row"><div class="av">${p.name[0]}</div><div><strong>${p.name}</strong><div class="muted">${p.type} — ${p.area}</div></div></div><span class="badge">${p.status}</span></button>`).join('')
+    ? list.map(p => `<button class="place" onclick="goDetail('${esc(p.id)}')"><div class="row">${avatar(p)}<div><strong>${esc(p.name)}</strong><div class="muted">${esc(p.type)} — ${esc(p.area)}</div></div></div><span class="badge">${esc(p.status)}</span>${starsBadge(p.id)}</button>`).join('')
     : '<div class="no-res">لا توجد نتائج</div>';
 }
 
@@ -576,27 +651,116 @@ function setFilter(f, btn) {
 function goDetail(id) {
   const p = places.find(x => String(x.id) === String(id));
   if (!p) return;
-  const waBtn = p.wa ? `<a class="action wa" href="https://wa.me/968${p.wa}">واتساب</a>` : `<span class="action" style="opacity:.35">لا يوجد</span>`;
-  const callBtn = p.phone ? `<a class="action call" href="tel:${p.phone}">${p.phone}</a>` : `<span class="action" style="opacity:.35">لا يوجد</span>`;
+  const mapUrl = safeUrl(p.map);
+  const waBtn = p.wa ? `<a class="action wa" href="https://wa.me/968${esc(p.wa)}">واتساب</a>` : `<span class="action" style="opacity:.35">لا يوجد</span>`;
+  const callBtn = p.phone ? `<a class="action call" href="tel:${esc(p.phone)}">${esc(p.phone)}</a>` : `<span class="action" style="opacity:.35">لا يوجد</span>`;
+  const mapBtn = mapUrl ? `<a class="action map-btn" href="${esc(mapUrl)}" target="_blank" rel="noopener">الموقع</a>` : `<span class="action" style="opacity:.35">لا يوجد</span>`;
+  rvSelected = 5;
   document.getElementById('detailContent').innerHTML = `
-    <div class="d-hero"><h2>${p.name}</h2><div class="muted">${p.desc}</div></div>
+    <div class="d-hero"><img class="d-hero-img" src="${photoUrl(p)}" alt="" onerror="this.nextElementSibling.remove();this.remove()"/><div class="d-hero-shade"></div><h2>${esc(p.name)}</h2><div class="muted">${esc(p.desc)}</div></div>
     <div class="d-card">
-      <span class="badge">${p.status}</span>
+      <span class="badge">${esc(p.status)}</span>${starsBadge(p.id)}
       <div class="info-grid">
-        <div class="info-box"><small>القسم</small><strong>${p.cat}</strong></div>
-        <div class="info-box"><small>النوع</small><strong>${p.type}</strong></div>
-        <div class="info-box"><small>المنطقة</small><strong>${p.area}</strong></div>
-        <div class="info-box"><small>ساعات العمل</small><strong>${p.hours}</strong></div>
+        <div class="info-box"><small>القسم</small><strong>${esc(p.cat)}</strong></div>
+        <div class="info-box"><small>النوع</small><strong>${esc(p.type)}</strong></div>
+        <div class="info-box"><small>المنطقة</small><strong>${esc(p.area)}</strong></div>
+        <div class="info-box"><small>ساعات العمل</small><strong>${esc(p.hours)}</strong></div>
       </div>
-      <div class="actions">${callBtn}${waBtn}<a class="action map-btn" href="${p.map}" target="_blank">الموقع</a></div>
+      <div class="actions">${callBtn}${waBtn}${mapBtn}</div>
+      <button class="share-btn" onclick="sharePlace('${esc(p.id)}')">📤 مشاركة المكان</button>
+    </div>
+    <div class="d-card" style="margin-top:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <strong style="font-size:14px">⭐ التقييمات والآراء</strong>
+        <small id="rvAvg" class="muted"></small>
+      </div>
+      <div id="rvList"><div class="no-rv">جارِ التحميل...</div></div>
+      <div class="rv-form">
+        <label style="display:block;font-size:13px;font-weight:700;margin-bottom:8px;text-align:center">قيّم هذا المكان</label>
+        <div class="rv-stars">
+          ${[1,2,3,4,5].map(n => `<button class="rv-star-btn${n <= rvSelected ? ' active' : ''}" data-n="${n}" onclick="setRvStars(${n})">★</button>`).join('')}
+        </div>
+        <input id="rv_name" class="rv-input" placeholder="اسمك (اختياري)"/>
+        <textarea id="rv_comment" class="rv-input" placeholder="شاركنا رأيك... (اختياري)"></textarea>
+        <button class="submit-btn" style="margin-top:2px;padding:12px;font-size:14px" onclick="submitReview('${esc(p.id)}', this)">إرسال التقييم</button>
+      </div>
     </div>`;
+  loadReviews(p.id);
   goScreen('detail');
+}
+
+let rvSelected = 5;
+function setRvStars(n) {
+  rvSelected = n;
+  document.querySelectorAll('.rv-star-btn').forEach(b => b.classList.toggle('active', Number(b.dataset.n) <= n));
+}
+
+async function loadReviews(id) {
+  const el = document.getElementById('rvList');
+  try {
+    const res = await fetch('/api/ratings?place=' + encodeURIComponent(id));
+    const data = await res.json();
+    if (!res.ok) throw new Error();
+    document.getElementById('rvAvg').textContent = data.count ? `${data.avg} من 5 · ${data.count} تقييم` : '';
+    el.innerHTML = data.count
+      ? data.reviews.map(r => `
+        <div class="rv-item">
+          <div class="rv-top"><strong>${esc(r.name)}</strong><span class="rv-st">${starsRow(Math.min(5, Math.max(1, r.stars | 0)))}</span></div>
+          ${r.comment ? `<div class="rv-txt">${esc(r.comment)}</div>` : ''}
+          <small class="muted">${esc(r.date)}</small>
+        </div>`).join('')
+      : '<div class="no-rv">لا توجد تقييمات بعد — كن أول من يقيّم! ⭐</div>';
+  } catch (err) {
+    el.innerHTML = '<div class="no-rv">تعذر تحميل التقييمات</div>';
+  }
+}
+
+async function submitReview(placeId, btn) {
+  btn.disabled = true;
+  btn.textContent = 'جارِ الإرسال...';
+  try {
+    const res = await fetch('/api/rate', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        placeId,
+        stars: rvSelected,
+        name: document.getElementById('rv_name').value.trim(),
+        comment: document.getElementById('rv_comment').value.trim()
+      })
+    });
+    if (res.status === 409) throw new Error('قيّمت هذا المكان خلال آخر 24 ساعة. شكراً لك!');
+    if (res.status === 429) throw new Error('محاولات كثيرة خلال وقت قصير، جرب لاحقاً.');
+    if (!res.ok) throw new Error('');
+    document.getElementById('rv_name').value = '';
+    document.getElementById('rv_comment').value = '';
+    btn.textContent = 'شكراً لتقييمك! ✅';
+    loadReviews(placeId);
+    loadRatings();
+    setTimeout(() => { btn.disabled = false; btn.textContent = 'إرسال التقييم'; }, 2500);
+  } catch (err) {
+    alert(err.message || 'حدث خطأ أثناء الإرسال. تأكد من اتصال الإنترنت وحاول مرة أخرى.');
+    btn.disabled = false;
+    btn.textContent = 'إرسال التقييم';
+  }
+}
+
+function sharePlace(id) {
+  const p = places.find(x => String(x.id) === String(id));
+  if (!p) return;
+  const lines = [`${p.name} — ${p.type} في ${p.area}`];
+  if (p.phone) lines.push(`📞 ${p.phone}`);
+  if (p.hours) lines.push(`🕐 ${p.hours}`);
+  const mapUrl = safeUrl(p.map);
+  if (mapUrl) lines.push(`📍 ${mapUrl}`);
+  lines.push('عبر تطبيق سند عمان 🇴🇲');
+  shareText(lines.join('\n'));
 }
 
 function renderFeatured() {
   const feat = [places[9], places[0], places[25], places[13]];
   document.getElementById('featuredList').innerHTML = feat.map(p =>
-    `<button class="place" onclick="goDetail('${p.id}')"><div class="row"><div class="av">${p.name[0]}</div><div><strong>${p.name}</strong><div class="muted">${p.type} — ${p.area}</div></div></div><span class="badge">${p.status}</span></button>`
+    `<button class="place" onclick="goDetail('${esc(p.id)}')"><div class="row">${avatar(p)}<div><strong>${esc(p.name)}</strong><div class="muted">${esc(p.type)} — ${esc(p.area)}</div></div></div><span class="badge">${esc(p.status)}</span>${starsBadge(p.id)}</button>`
   ).join('');
 }
 
@@ -623,7 +787,7 @@ document.getElementById('SI').addEventListener('input', function() {
     p.cat.toLowerCase().includes(q) || p.area.toLowerCase().includes(q)
   ).slice(0, 6);
   SR.innerHTML = found.length
-    ? found.map(p => `<div class="s-item" onclick="goDetail(${p.id});closeSR()"><strong>${p.name}</strong><small>${p.type} — ${p.area}</small></div>`).join('')
+    ? found.map(p => `<div class="s-item" onclick="goDetail('${esc(p.id)}');closeSR()"><strong>${esc(p.name)}</strong><small>${esc(p.type)} — ${esc(p.area)}</small></div>`).join('')
     : '<div class="s-item"><small>لا توجد نتائج</small></div>';
   SR.classList.remove('hidden');
 });
@@ -648,6 +812,14 @@ function toggleInt(v, btn) {
   aiInterests = aiInterests.includes(v) ? aiInterests.filter(x => x !== v) : [...aiInterests, v];
 }
 
+let lastPlan = null;
+let loadingTimer = null;
+const loadingMsgs = [
+  'الذكاء الاصطناعي يخطط رحلتك...',
+  'نرتب لك الأماكن الأنسب...',
+  'لحظات ويجهز جدولك...'
+];
+
 async function generatePlan() {
   if (!aiInterests.length) { alert('اختر اهتمام واحد على الأقل!'); return; }
   document.getElementById('aiForm').style.display = 'none';
@@ -656,44 +828,63 @@ async function generatePlan() {
   const loading = document.getElementById('aiLoading');
   loading.style.display = 'block';
   document.getElementById('aiPlan').innerHTML = '';
-
-  const tour = places.filter(p => p.cat === 'السياحة والترفيه').map(p => p.name).join('، ');
-  const rest = places.filter(p => p.cat === 'المطاعم والمقاهي').map(p => p.name).join('، ');
-
-  const prompt = `أنت مرشد سياحي خبير في البريمي، سلطنة عُمان.
-المستخدم يريد: مدة الرحلة: ${aiDays} ${aiDays===1?'يوم':'أيام'}، نوع الرحلة: ${aiTrip}، الاهتمامات: ${aiInterests.join('، ')}.
-الأماكن السياحية: ${tour}. المطاعم: ${rest}.
-أجب فقط بـ JSON هكذا بدون أي نص إضافي أو backticks:
-{"title":"عنوان","summary":"جملة تشويقية","days":[{"day":1,"title":"عنوان اليوم","activities":[{"time":"9:00 ص","place":"اسم المكان","desc":"وصف قصير"}]}]}`;
+  const loadingText = loading.querySelector('p');
+  let mi = 0;
+  loadingText.textContent = loadingMsgs[0];
+  clearInterval(loadingTimer);
+  loadingTimer = setInterval(() => {
+    mi = (mi + 1) % loadingMsgs.length;
+    loadingText.textContent = loadingMsgs[mi];
+  }, 3500);
 
   try {
     const res = await fetch('/api/plan', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({prompt})
+      body: JSON.stringify({ days: aiDays, trip: aiTrip, interests: aiInterests })
     });
-    const data = await res.json();
-    const text = data.content.map(i => i.text||'').join('').replace(/```json|```/g,'').trim();
-    const plan = JSON.parse(text);
-    loading.style.display = 'none';
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.plan) {
+      throw new Error(res.status === 429
+        ? 'وصلت الحد الأقصى من المحاولات. جرب مرة ثانية بعد ساعة.'
+        : 'تعذر بناء الجدول حالياً. تأكد من اتصال الإنترنت وحاول مرة ثانية.');
+    }
+    const plan = data.plan;
+    lastPlan = plan;
     document.getElementById('aiPlan').innerHTML = `
       <div class="day-card" style="background:linear-gradient(135deg,rgba(109,91,208,.08),rgba(15,110,92,.07)),#fff;border-color:#e2dcf8">
-        <div style="font-size:19px;font-weight:800;color:#6d5bd0;margin-bottom:5px">${plan.title}</div>
-        <div style="font-size:13px;color:#6b7280">${plan.summary}</div>
+        <div style="font-size:19px;font-weight:800;color:#6d5bd0;margin-bottom:5px">${esc(plan.title)}</div>
+        <div style="font-size:13px;color:#6b7280">${esc(plan.summary)}</div>
       </div>
       ${plan.days.map(d=>`
         <div class="day-card">
-          <div class="day-title">📅 اليوم ${d.day}: ${d.title}</div>
+          <div class="day-title">📅 اليوم ${esc(d.day)}: ${esc(d.title)}</div>
           ${d.activities.map(a=>`
             <div class="activity">
-              <div class="act-time">${a.time}</div>
-              <div class="act-body"><strong>${a.place}</strong><span>${a.desc}</span></div>
+              <div class="act-time">${esc(a.time)}</div>
+              <div class="act-body"><strong>${esc(a.place)}</strong><span>${esc(a.desc)}</span></div>
             </div>`).join('')}
-        </div>`).join('')}`;
+        </div>`).join('')}
+      <button class="share-btn" onclick="sharePlan()">📤 شارك الجدول</button>`;
   } catch(err) {
+    lastPlan = null;
+    document.getElementById('aiPlan').innerHTML = `<div class="alert-box warn"><strong>⚠️ خطأ</strong><div class="muted">${esc(err.message || 'حاول مرة ثانية.')}</div></div>`;
+  } finally {
+    clearInterval(loadingTimer);
     loading.style.display = 'none';
-    document.getElementById('aiPlan').innerHTML = '<div class="alert-box warn"><strong>⚠️ خطأ في الاتصال</strong><div class="muted">تأكد من اتصال الإنترنت وحاول مرة ثانية.</div></div>';
   }
+}
+
+function sharePlan() {
+  if (!lastPlan) return;
+  const lines = [`🤖 ${lastPlan.title}`, lastPlan.summary, ''];
+  lastPlan.days.forEach(d => {
+    lines.push(`📅 اليوم ${d.day}: ${d.title}`);
+    d.activities.forEach(a => lines.push(`${a.time} — ${a.place}: ${a.desc}`));
+    lines.push('');
+  });
+  lines.push('عبر تطبيق سند عمان 🇴🇲');
+  shareText(lines.join('\n'));
 }
 
 function resetAI() {
@@ -735,11 +926,15 @@ async function submitRequest() {
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({name, cat, type, area, phone, wa, hours, map, desc, owner, contact})
     });
-    if (!res.ok) throw new Error();
+    if (!res.ok) {
+      throw new Error(res.status === 429
+        ? 'أرسلت طلبات كثيرة خلال وقت قصير. حاول مرة أخرى بعد ساعة.'
+        : '');
+    }
     document.getElementById('regForm').style.display = 'none';
     document.getElementById('regSuccess').style.display = 'block';
   } catch (err) {
-    alert('حدث خطأ أثناء الإرسال. تأكد من اتصال الإنترنت وحاول مرة أخرى.');
+    alert(err.message || 'حدث خطأ أثناء الإرسال. تأكد من اتصال الإنترنت وحاول مرة أخرى.');
   } finally {
     btn.disabled = false;
     btn.textContent = '📨 إرسال طلب التسجيل';
@@ -759,6 +954,7 @@ async function adminLogin() {
     document.getElementById('adminPanel').style.display = 'block';
     document.getElementById('loginErr').style.display = 'none';
     renderAdminPanel();
+    loadAdminReviews();
   } catch (err) {
     document.getElementById('loginErr').style.display = 'block';
     document.getElementById('adminPass').value = '';
@@ -802,14 +998,14 @@ function reqCard(r, showActions) {
            </div>`
         : '');
   return `
-    <div class="req-card" id="req_${r.id}">
-      <div class="rq-name">${r.name} ${statusMap[r.status]}</div>
-      <div class="rq-meta">${r.cat} · ${r.type} · ${r.area} · ${r.date}</div>
+    <div class="req-card" id="req_${esc(r.id)}">
+      <div class="rq-name">${esc(r.name)} ${statusMap[r.status] || ''}</div>
+      <div class="rq-meta">${esc(r.cat)} · ${esc(r.type)} · ${esc(r.area)} · ${esc(r.date)}</div>
       <div class="rq-detail">
-        📞 ${r.phone}${r.wa ? ' | واتساب: ' + r.wa : ''}<br>
-        🕐 ${r.hours}<br>
-        👤 ${r.owner} — ${r.contact}<br>
-        ${r.desc ? '📝 ' + r.desc : ''}
+        📞 ${esc(r.phone)}${r.wa ? ' | واتساب: ' + esc(r.wa) : ''}<br>
+        🕐 ${esc(r.hours)}<br>
+        👤 ${esc(r.owner)} — ${esc(r.contact)}<br>
+        ${r.desc ? '📝 ' + esc(r.desc) : ''}
       </div>
       ${actions}
     </div>`;
@@ -853,6 +1049,57 @@ async function unpublishReq(id) {
   }
 }
 
+// ===== إدارة التقييمات (مشرف) =====
+let adminReviewsList = [];
+
+function placeName(id) {
+  const p = places.find(x => String(x.id) === String(id));
+  return p ? p.name : 'مكان غير موجود';
+}
+
+async function loadAdminReviews() {
+  try {
+    const res = await fetch('/api/ratings?all=1', { headers: {'x-admin-password': adminPassword} });
+    const data = await res.json();
+    adminReviewsList = data.reviews || [];
+  } catch (err) {
+    adminReviewsList = [];
+  }
+  renderAdminReviews();
+}
+
+function renderAdminReviews() {
+  const el = document.getElementById('adminReviews');
+  el.innerHTML = adminReviewsList.length
+    ? adminReviewsList.slice(0, 20).map(r => `
+      <div class="req-card">
+        <div class="rq-name"><span class="rv-st">${starsRow(Math.min(5, Math.max(1, r.stars | 0)))}</span> — ${esc(r.name)}</div>
+        <div class="rq-meta">${esc(placeName(r.placeId))} · ${esc(r.date)}</div>
+        ${r.comment ? `<div class="rq-detail">${esc(r.comment)}</div>` : ''}
+        <div class="req-actions" style="grid-template-columns:1fr">
+          <button class="reject-btn" onclick="deleteReview('${esc(r.id)}')">🗑️ حذف التقييم</button>
+        </div>
+      </div>`).join('')
+    : '<div class="empty-req">لا توجد تقييمات بعد</div>';
+}
+
+async function deleteReview(id) {
+  if (!confirm('حذف هذا التقييم نهائياً؟')) return;
+  try {
+    const res = await fetch('/api/ratings', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'x-admin-password': adminPassword},
+      body: JSON.stringify({ id })
+    });
+    if (!res.ok) throw new Error();
+    adminReviewsList = adminReviewsList.filter(r => r.id !== id);
+    renderAdminReviews();
+    loadRatings();
+  } catch (err) {
+    alert('حدث خطأ، حاول مرة أخرى.');
+  }
+}
+
 async function loadApprovedPlaces() {
   try {
     const res = await fetch('/api/places');
@@ -884,6 +1131,7 @@ window.goScreen = function(id) {
 // ===== تشغيل =====
 renderFeatured();
 loadApprovedPlaces();
+loadRatings();
 
 // تسجيل Service Worker (يشتغل فقط على https بعد الرفع)
 if ('serviceWorker' in navigator && location.protocol === 'https:') {

@@ -1,5 +1,5 @@
 // دالة خادمة عامة — تستقبل طلب تسجيل نشاط تجاري وتحفظه في قاعدة البيانات
-import { lpush } from './_kv.js';
+import { lpush, rateLimit } from './_kv.js';
 
 function clean(v, max) {
   return typeof v === 'string' ? v.trim().slice(0, max) : '';
@@ -18,14 +18,23 @@ export default async function handler(req, res) {
   const phone   = clean(b.phone, 20);
   const wa      = clean(b.wa, 20);
   const hours   = clean(b.hours, 60);
-  const map     = clean(b.map, 300);
   const desc    = clean(b.desc, 500);
+  // نقبل روابط الخرائط التي تبدأ بـ http/https فقط
+  let map = clean(b.map, 300);
+  if (map && !/^https?:\/\//i.test(map)) map = '';
   const owner   = clean(b.owner, 100);
   const contact = clean(b.contact, 20);
 
   if (!name || !cat || !type || !area || !phone || !hours || !owner || !contact) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
+
+  const ip = ((req.headers['x-forwarded-for'] || '').split(',')[0] || '').trim() || 'unknown';
+  try {
+    if (!(await rateLimit(`sanad:rl:submit:${ip}`, 5, 3600))) {
+      return res.status(429).json({ error: 'Too many requests' });
+    }
+  } catch (err) {}
 
   const request = {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),

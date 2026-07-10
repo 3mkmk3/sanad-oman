@@ -1,9 +1,13 @@
 // Service Worker — استراتيجية "الشبكة أولاً" حتى يحصل المستخدم دائماً على أحدث نسخة
 // مع نسخة محفوظة تعمل عند انقطاع الإنترنت
-const CACHE = 'sanad-v1';
+const CACHE = 'sanad-v2';
 
 self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', e => e.waitUntil(clients.claim()));
+self.addEventListener('activate', e => e.waitUntil(
+  caches.keys()
+    .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+    .then(() => clients.claim())
+));
 
 self.addEventListener('fetch', e => {
   // لا نخزن طلبات الذكاء الاصطناعي ولا الطلبات غير GET

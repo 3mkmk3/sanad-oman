@@ -37,3 +37,19 @@ export function lset(key, index, value) {
 export function del(key) {
   return command(['DEL', key]);
 }
+
+export function get(key) {
+  return command(['GET', key]);
+}
+
+// حفظ قيمة مع مدة صلاحية بالثواني — تُستخدم للتخزين المؤقت (صور الأماكن مثلاً)
+export function setex(key, seconds, value) {
+  return command(['SETEX', key, String(seconds), value]);
+}
+
+// عدّاد بسيط للحد من عدد الطلبات لكل زائر خلال فترة زمنية
+export async function rateLimit(key, limit, windowSeconds) {
+  const count = await command(['INCR', key]);
+  if (count === 1) await command(['EXPIRE', key, String(windowSeconds)]);
+  return count <= limit;
+}
