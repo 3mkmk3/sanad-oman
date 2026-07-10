@@ -177,6 +177,32 @@ button,a{font:inherit;border:0;cursor:pointer;text-decoration:none;}
 textarea.rv-input{resize:vertical;min-height:58px;}
 .no-rv{text-align:center;color:var(--muted);font-size:12.5px;padding:12px 0;}
 
+/* ===== اسأل سند ===== */
+.ask-fab{position:fixed;bottom:80px;left:16px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#6d5bd0,#0f6e5c);color:#fff;font-size:23px;border:none;box-shadow:0 6px 20px rgba(109,91,208,.45);z-index:50;display:flex;align-items:center;justify-content:center;transition:transform .15s;}
+.ask-fab:active{transform:scale(.9);}
+.ask-overlay{position:fixed;inset:0;background:#fff;z-index:200;display:flex;flex-direction:column;transform:translateY(102%);transition:transform .32s ease;}
+.ask-overlay.open{transform:translateY(0);}
+.ask-header{display:flex;align-items:center;gap:10px;padding:16px;background:linear-gradient(135deg,#6d5bd0,#0f6e5c);color:#fff;flex-shrink:0;}
+.ask-header button{background:rgba(255,255,255,.22);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:16px;flex-shrink:0;}
+.ask-header small{display:block;font-size:11px;opacity:.85;margin-top:1px;}
+.ask-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:#fafcfb;}
+.ask-bubble{max-width:82%;padding:11px 14px;border-radius:16px;font-size:13.5px;line-height:1.65;white-space:pre-wrap;}
+.ask-bubble.user{align-self:flex-end;background:var(--green);color:#fff;border-bottom-left-radius:4px;}
+.ask-bubble.ai{align-self:flex-start;background:#fff;border:1px solid var(--line);color:var(--ink);border-bottom-right-radius:4px;}
+.ask-place-card{align-self:flex-start;max-width:88%;background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:10px 12px;}
+.ask-place-actions{display:flex;gap:6px;margin-top:8px;}
+.ask-place-actions a,.ask-place-actions button{flex:1;text-align:center;font-size:11.5px;padding:8px 4px;border-radius:10px;border:none;font-weight:700;}
+.ask-typing{align-self:flex-start;background:#fff;border:1px solid var(--line);padding:13px 16px;border-radius:16px;display:flex;gap:4px;}
+.ask-typing span{width:6px;height:6px;border-radius:50%;background:#9aa39d;animation:askBlink 1.2s infinite;}
+.ask-typing span:nth-child(2){animation-delay:.2s;}
+.ask-typing span:nth-child(3){animation-delay:.4s;}
+@keyframes askBlink{0%,60%,100%{opacity:.25}30%{opacity:1}}
+.ask-input-row{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line);flex-shrink:0;background:#fff;}
+.ask-input-row input{flex:1;padding:12px 14px;border-radius:20px;border:1.5px solid var(--line);font:inherit;font-size:13.5px;outline:none;}
+.ask-input-row input:focus{border-color:var(--green);}
+.ask-input-row button{width:44px;height:44px;border-radius:50%;background:var(--green);color:#fff;border:none;font-size:17px;flex-shrink:0;}
+.ask-input-row button:disabled{opacity:.5;}
+
 /* ===== المزيد ===== */
 .more-list{background:var(--card);border-radius:20px;border:1px solid rgba(230,235,232,.7);overflow:hidden;box-shadow:var(--shadow-sm);}
 .more-item{display:flex;gap:13px;align-items:center;padding:16px;border-bottom:1px solid var(--line);font-size:21px;transition:background .15s;}
@@ -519,6 +545,19 @@ textarea.rv-input{resize:vertical;min-height:58px;}
     <button class="nav-btn" onclick="goScreen('alerts')">🔔<span>تنبيهات</span></button>
     <button class="nav-btn" onclick="goScreen('more')">⋯<span>المزيد</span></button>
   </nav>
+
+  <button class="ask-fab" onclick="openAsk()" aria-label="اسأل سند">💬</button>
+  <div class="ask-overlay" id="askOverlay">
+    <div class="ask-header">
+      <button onclick="closeAsk()">→</button>
+      <div><strong>اسأل سند 🤖</strong><small>اسأل عن أي خدمة أو مكان بالبريمي</small></div>
+    </div>
+    <div class="ask-msgs" id="askMsgs"></div>
+    <div class="ask-input-row">
+      <input id="askInput" placeholder="مثال: أبي سباك الحين..." onkeydown="if(event.key==='Enter')sendAsk()"/>
+      <button id="askSendBtn" onclick="sendAsk()">➤</button>
+    </div>
+  </div>
 </main>
 
 <script>
@@ -1135,6 +1174,92 @@ window.goScreen = function(id) {
   }
   origGoScreen(id);
 };
+
+// ===== اسأل سند =====
+let askHistory = [];
+let askStarted = false;
+
+function openAsk() {
+  document.getElementById('askOverlay').classList.add('open');
+  if (!askStarted) {
+    askStarted = true;
+    addAskBubble('ai', 'أهلاً! أنا سند 🤖 اسألني عن أي خدمة أو مكان تحتاجه بالبريمي، وبساعدك أوصلك لأقرب حل.');
+  }
+  document.getElementById('askInput').focus();
+}
+function closeAsk() {
+  document.getElementById('askOverlay').classList.remove('open');
+}
+
+function addAskBubble(role, text) {
+  const el = document.getElementById('askMsgs');
+  const div = document.createElement('div');
+  div.className = 'ask-bubble ' + role;
+  div.textContent = text;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+}
+
+function addAskPlaceCards(ids) {
+  const el = document.getElementById('askMsgs');
+  ids.forEach(id => {
+    const p = places.find(x => String(x.id) === String(id));
+    if (!p) return;
+    const div = document.createElement('div');
+    div.className = 'ask-place-card';
+    div.innerHTML = `
+      <div class="row">${avatar(p)}<div><strong>${esc(p.name)}</strong><div class="muted" style="font-size:11.5px">${esc(p.type)} — ${esc(p.area)}</div></div></div>
+      <div class="ask-place-actions">
+        ${p.phone ? `<a href="tel:${esc(p.phone)}" style="background:var(--green-lt);color:var(--green-deep)">📞 اتصال</a>` : ''}
+        ${p.wa ? `<a href="https://wa.me/968${esc(p.wa)}" style="background:#dcf8e8;color:#0a7d3c">واتساب</a>` : ''}
+        <button onclick="closeAsk();goDetail('${esc(p.id)}')" style="background:var(--gold-lt);color:#8a6420">التفاصيل</button>
+      </div>`;
+    el.appendChild(div);
+  });
+  el.scrollTop = el.scrollHeight;
+}
+
+async function sendAsk() {
+  const input = document.getElementById('askInput');
+  const btn = document.getElementById('askSendBtn');
+  const message = input.value.trim();
+  if (!message || btn.disabled) return;
+  input.value = '';
+  btn.disabled = true;
+  addAskBubble('user', message);
+
+  const el = document.getElementById('askMsgs');
+  const typing = document.createElement('div');
+  typing.className = 'ask-typing';
+  typing.id = 'askTyping';
+  typing.innerHTML = '<span></span><span></span><span></span>';
+  el.appendChild(typing);
+  el.scrollTop = el.scrollHeight;
+
+  try {
+    const res = await fetch('/api/ask', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ message, history: askHistory })
+    });
+    const data = await res.json().catch(() => ({}));
+    document.getElementById('askTyping')?.remove();
+    if (!res.ok || !data.reply) {
+      throw new Error(res.status === 429
+        ? 'وصلت الحد الأقصى من الأسئلة. جرب بعد ساعة.'
+        : 'تعذر الرد الآن، حاول مرة ثانية.');
+    }
+    addAskBubble('ai', data.reply);
+    if (data.placeIds && data.placeIds.length) addAskPlaceCards(data.placeIds);
+    askHistory.push({ role: 'user', content: message }, { role: 'assistant', content: data.reply });
+    askHistory = askHistory.slice(-6);
+  } catch (err) {
+    document.getElementById('askTyping')?.remove();
+    addAskBubble('ai', err.message || 'حدث خطأ، حاول مرة أخرى.');
+  } finally {
+    btn.disabled = false;
+  }
+}
 
 // ===== تشغيل =====
 renderFeatured();
