@@ -1,6 +1,7 @@
 // دالة خادمة — "اسأل سند": مساعد ذكي يفهم طلب المستخدم بلغة طبيعية
 // ويقترح أماكن حقيقية من قاعدة البيانات مع سبب مختصر، بدل تصفح الأقسام يدوياً
 import { lrangeAll, rateLimit } from './_kv.js';
+import { BASE_PLACES } from './_places.js';
 
 const REPLY_SCHEMA = {
   type: 'object',
@@ -43,22 +44,47 @@ export default async function handler(req, res) {
     }
   } catch (err) {}
 
-  let placesList = [];
+  // كل الأماكن: الثابتة في التطبيق + المسجلة المعتمدة من قاعدة البيانات
+  let placesList = [...BASE_PLACES];
   try {
-    placesList = await lrangeAll('sanad:places');
+    placesList = placesList.concat(await lrangeAll('sanad:places'));
   } catch (err) {}
 
-  const placesText = placesList.slice(0, 200)
-    .map(p => `${p.id}|${p.name}|${p.cat}|${p.type}|${p.area}|${p.hours}|${p.status}`)
+  // متوسط التقييمات لكل مكان — حتى يرشّح المساعد الأعلى تقييماً
+  const ratings = {};
+  try {
+    for (const r of await lrangeAll('sanad:reviews')) {
+      const s = ratings[r.placeId] || (ratings[r.placeId] = { sum: 0, count: 0 });
+      s.sum += r.stars;
+      s.count++;
+    }
+  } catch (err) {}
+  const ratingText = id => {
+    const s = ratings[String(id)];
+    return s ? `⭐${(s.sum / s.count).toFixed(1)}(${s.count})` : '-';
+  };
+
+  const placesText = placesList.slice(0, 250)
+    .map(p => `${p.id}|${p.name}|${p.cat}|${p.type}|${p.area}|${p.hours}|${p.status}|${ratingText(p.id)}`)
     .join('\n');
 
+  // الوقت الحالي في عُمان — حتى يعرف المساعد المفتوح الآن من ساعات العمل
+  let timeStr = '';
+  try {
+    timeStr = new Intl.DateTimeFormat('ar-OM', {
+      timeZone: 'Asia/Muscat', weekday: 'long', hour: 'numeric', minute: '2-digit', hour12: true
+    }).format(new Date());
+  } catch (err) {}
+
   const system = `أنت "سند" — مساعد ذكي محلي داخل تطبيق "سند عمان" لسكان وزوار ولاية البريمي.
+${timeStr ? `الوقت الآن في عُمان: ${timeStr}. استخدمه لتقدير الأماكن المفتوحة حالياً من ساعات عملها، ونبّه المستخدم إذا كان المكان مغلقاً الآن.` : ''}
 مهمتك: افهم طلب المستخدم (خدمة، مكان، أو نصيحة) وردّ برسالة عربية ودودة ومختصرة (سطران إلى ثلاثة كحد أقصى).
 إن وجدت أماكن مناسبة من القائمة أدناه اذكرها بالاسم في ردك وضع معرّفاتها (id) في place_ids (بحد أقصى 3، الأنسب أولاً).
+عند تساوي الخيارات قدّم الأعلى تقييماً من الزوار (عمود التقييم الأخير)، واذكر التقييم إن كان مميزاً.
 إن لم تجد شيئاً مناسباً في القائمة اعتذر بصدق واترك place_ids فارغة — لا تخترع أماكن أو أرقام هواتف غير موجودة في القائمة.
 
-الأماكن المتوفرة (id|الاسم|القسم|النوع|المنطقة|الساعات|الحالة):
-${placesText || 'لا توجد أماكن مسجلة بعد'}`;
+الأماكن المتوفرة (id|الاسم|القسم|النوع|المنطقة|الساعات|الحالة|التقييم):
+${placesText}`;
 
   try {
     const r = await fetch('https://api.anthropic.com/v1/messages', {

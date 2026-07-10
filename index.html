@@ -202,6 +202,12 @@ textarea.rv-input{resize:vertical;min-height:58px;}
 .ask-input-row input:focus{border-color:var(--green);}
 .ask-input-row button{width:44px;height:44px;border-radius:50%;background:var(--green);color:#fff;border:none;font-size:17px;flex-shrink:0;}
 .ask-input-row button:disabled{opacity:.5;}
+.ask-mic{background:#f1f4f2 !important;color:var(--ink) !important;border:1.5px solid var(--line) !important;}
+.ask-mic.rec{background:#fde8e8 !important;border-color:#e05252 !important;animation:micPulse 1s infinite;}
+@keyframes micPulse{50%{transform:scale(1.12)}}
+.ask-chips{display:flex;flex-wrap:wrap;gap:8px;align-self:flex-start;max-width:90%;}
+.ask-chips button{background:#fff;border:1.5px solid #cfe6dd;color:var(--green-deep);border-radius:18px;padding:9px 14px;font-size:12.5px;font-weight:700;transition:transform .12s;}
+.ask-chips button:active{transform:scale(.94);background:var(--green-lt);}
 
 /* ===== المزيد ===== */
 .more-list{background:var(--card);border-radius:20px;border:1px solid rgba(230,235,232,.7);overflow:hidden;box-shadow:var(--shadow-sm);}
@@ -554,6 +560,7 @@ textarea.rv-input{resize:vertical;min-height:58px;}
     </div>
     <div class="ask-msgs" id="askMsgs"></div>
     <div class="ask-input-row">
+      <button id="askMicBtn" class="ask-mic" onclick="toggleAskMic()" aria-label="تحدث بدل الكتابة">🎤</button>
       <input id="askInput" placeholder="مثال: أبي سباك الحين..." onkeydown="if(event.key==='Enter')sendAsk()"/>
       <button id="askSendBtn" onclick="sendAsk()">➤</button>
     </div>
@@ -1179,11 +1186,23 @@ window.goScreen = function(id) {
 let askHistory = [];
 let askStarted = false;
 
+const ASK_CHIPS = ['أبي ونش الحين 🚗', 'وين أقرب صيدلية؟ 💊', 'أبي مطعم عماني 🍽️', 'أبي سباك 🔧'];
+
 function openAsk() {
   document.getElementById('askOverlay').classList.add('open');
   if (!askStarted) {
     askStarted = true;
     addAskBubble('ai', 'أهلاً! أنا سند 🤖 اسألني عن أي خدمة أو مكان تحتاجه بالبريمي، وبساعدك أوصلك لأقرب حل.');
+    const chips = document.createElement('div');
+    chips.className = 'ask-chips';
+    chips.id = 'askChips';
+    ASK_CHIPS.forEach(c => {
+      const b = document.createElement('button');
+      b.textContent = c;
+      b.onclick = () => { document.getElementById('askInput').value = c; sendAsk(); };
+      chips.appendChild(b);
+    });
+    document.getElementById('askMsgs').appendChild(chips);
   }
   document.getElementById('askInput').focus();
 }
@@ -1200,15 +1219,34 @@ function addAskBubble(role, text) {
   el.scrollTop = el.scrollHeight;
 }
 
+// كتابة تدريجية لرد المساعد — إحساس طبيعي أكثر من ظهور النص دفعة واحدة
+function typeAskBubble(text) {
+  const el = document.getElementById('askMsgs');
+  const div = document.createElement('div');
+  div.className = 'ask-bubble ai';
+  el.appendChild(div);
+  return new Promise(resolve => {
+    let i = 0;
+    const step = Math.max(2, Math.ceil(text.length / 50));
+    const t = setInterval(() => {
+      i = Math.min(text.length, i + step);
+      div.textContent = text.slice(0, i);
+      el.scrollTop = el.scrollHeight;
+      if (i >= text.length) { clearInterval(t); resolve(); }
+    }, 28);
+  });
+}
+
 function addAskPlaceCards(ids) {
   const el = document.getElementById('askMsgs');
   ids.forEach(id => {
     const p = places.find(x => String(x.id) === String(id));
     if (!p) return;
+    const r = ratingsSummary[String(p.id)];
     const div = document.createElement('div');
     div.className = 'ask-place-card';
     div.innerHTML = `
-      <div class="row">${avatar(p)}<div><strong>${esc(p.name)}</strong><div class="muted" style="font-size:11.5px">${esc(p.type)} — ${esc(p.area)}</div></div></div>
+      <div class="row">${avatar(p)}<div><strong>${esc(p.name)}</strong><div class="muted" style="font-size:11.5px">${esc(p.type)} — ${esc(p.area)}${r ? ` · <span style="color:#c9971c;font-weight:700">⭐ ${esc(r.avg)}</span>` : ''}</div></div></div>
       <div class="ask-place-actions">
         ${p.phone ? `<a href="tel:${esc(p.phone)}" style="background:var(--green-lt);color:var(--green-deep)">📞 اتصال</a>` : ''}
         ${p.wa ? `<a href="https://wa.me/968${esc(p.wa)}" style="background:#dcf8e8;color:#0a7d3c">واتساب</a>` : ''}
@@ -1226,6 +1264,7 @@ async function sendAsk() {
   if (!message || btn.disabled) return;
   input.value = '';
   btn.disabled = true;
+  document.getElementById('askChips')?.remove();
   addAskBubble('user', message);
 
   const el = document.getElementById('askMsgs');
@@ -1249,7 +1288,7 @@ async function sendAsk() {
         ? 'وصلت الحد الأقصى من الأسئلة. جرب بعد ساعة.'
         : 'تعذر الرد الآن، حاول مرة ثانية.');
     }
-    addAskBubble('ai', data.reply);
+    await typeAskBubble(data.reply);
     if (data.placeIds && data.placeIds.length) addAskPlaceCards(data.placeIds);
     askHistory.push({ role: 'user', content: message }, { role: 'assistant', content: data.reply });
     askHistory = askHistory.slice(-6);
@@ -1258,10 +1297,37 @@ async function sendAsk() {
     addAskBubble('ai', err.message || 'حدث خطأ، حاول مرة أخرى.');
   } finally {
     btn.disabled = false;
+    input.focus();
+  }
+}
+
+// إدخال صوتي — يظهر فقط في المتصفحات التي تدعمه (كروم أندرويد غالباً)
+const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+let askRec = null;
+
+function toggleAskMic() {
+  const btn = document.getElementById('askMicBtn');
+  if (askRec) { try { askRec.stop(); } catch (err) {} return; }
+  try {
+    askRec = new SpeechRec();
+    askRec.lang = 'ar-OM';
+    askRec.interimResults = false;
+    askRec.onresult = e => {
+      const t = e.results[0][0].transcript;
+      if (t) { document.getElementById('askInput').value = t; sendAsk(); }
+    };
+    askRec.onend = () => { askRec = null; btn.classList.remove('rec'); };
+    askRec.onerror = () => { askRec = null; btn.classList.remove('rec'); };
+    btn.classList.add('rec');
+    askRec.start();
+  } catch (err) {
+    askRec = null;
+    btn.classList.remove('rec');
   }
 }
 
 // ===== تشغيل =====
+if (!SpeechRec) document.getElementById('askMicBtn').style.display = 'none';
 renderFeatured();
 loadApprovedPlaces();
 loadRatings();

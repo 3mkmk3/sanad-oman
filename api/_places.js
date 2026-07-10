@@ -1,0 +1,35 @@
+// نسخة خادمية من الأماكن الثابتة في التطبيق — يستخدمها مساعد "اسأل سند"
+// (البيانات الكاملة مع الهواتف والروابط تبقى في index.html؛ هنا فقط ما يحتاجه الذكاء الاصطناعي)
+// ملاحظة: عند تحديث بيانات الأماكن في index.html حدّث هذا الملف أيضاً
+export const BASE_PLACES = [
+  { id: 1, name: 'Al Buraimi Medical Center', cat: 'الصحة', type: 'مستشفى', area: 'البريمي', hours: '24 ساعة', status: '✅ مفتوح' },
+  { id: 2, name: 'Orchid Dental Clinic', cat: 'الصحة', type: 'عيادة أسنان', area: 'البريمي', hours: '9ص-9م', status: '✅ مفتوح' },
+  { id: 3, name: 'Al Shifa Clinic', cat: 'الصحة', type: 'عيادة خاصة', area: 'البريمي', hours: '8ص-10م', status: '✅ مفتوح' },
+  { id: 4, name: 'مستشفى البريمي الحكومي', cat: 'الصحة', type: 'مستشفى حكومي', area: 'البريمي', hours: '24 ساعة', status: '✅ مفتوح' },
+  { id: 5, name: 'صيدلية الشفاء', cat: 'الصحة', type: 'صيدلية', area: 'وسط البريمي', hours: '8ص-12م', status: '✅ مفتوح' },
+  { id: 6, name: 'صيدلية النور', cat: 'الصحة', type: 'صيدلية', area: 'الصريمي', hours: '9ص-11م', status: '✅ مفتوح' },
+  { id: 7, name: 'مركز صحي الصريمي', cat: 'الصحة', type: 'مركز صحي', area: 'الصريمي', hours: '7ص-3م', status: '✅ مفتوح' },
+  { id: 8, name: 'Precision Auto Center', cat: 'السيارات', type: 'كراج', area: 'المنطقة الصناعية', hours: '7ص-8م', status: '✅ مفتوح' },
+  { id: 9, name: 'Al Buraimi Tires', cat: 'السيارات', type: 'إطارات وبنشر', area: 'البريمي', hours: '6ص-11م', status: '✅ مفتوح' },
+  { id: 10, name: 'ونش البريمي السريع', cat: 'السيارات', type: 'سحب سيارات', area: 'البريمي', hours: '24 ساعة', status: '✅ متاح الآن' },
+  { id: 11, name: 'ونش الخليج', cat: 'السيارات', type: 'سحب سيارات', area: 'الصريمي', hours: '24 ساعة', status: '✅ متاح الآن' },
+  { id: 12, name: 'محطة وقود OQ', cat: 'السيارات', type: 'محطة وقود', area: 'مدخل البريمي', hours: '24 ساعة', status: '✅ متاح' },
+  { id: 13, name: 'Reef Restaurant', cat: 'المطاعم والمقاهي', type: 'مطعم', area: 'البريمي', hours: '12م-12ب', status: '✅ مفتوح' },
+  { id: 14, name: 'Al Yahar Restaurant', cat: 'المطاعم والمقاهي', type: 'مطعم عماني', area: 'وسط البريمي', hours: '11ص-11م', status: '✅ مفتوح' },
+  { id: 15, name: 'Oasis Cafe', cat: 'المطاعم والمقاهي', type: 'كافيه', area: 'البريمي', hours: '7ص-1ب', status: '✅ مفتوح' },
+  { id: 16, name: 'مطعم البريمي العماني', cat: 'المطاعم والمقاهي', type: 'مطعم عماني', area: 'وسط البريمي', hours: '11ص-11م', status: '✅ مفتوح' },
+  { id: 17, name: 'مقهى النخيل', cat: 'المطاعم والمقاهي', type: 'مقهى', area: 'وسط البريمي', hours: '7ص-1ب', status: '✅ مفتوح' },
+  { id: 18, name: 'Al Buraimi Plumbing', cat: 'خدمات المنزل', type: 'سباكة', area: 'البريمي', hours: '7ص-9م', status: '✅ متاح' },
+  { id: 19, name: 'Quick Electric Services', cat: 'خدمات المنزل', type: 'كهرباء', area: 'البريمي', hours: '8ص-9م', status: '✅ متاح' },
+  { id: 20, name: 'فني تكييف البريمي', cat: 'خدمات المنزل', type: 'تصليح تكييف', area: 'البريمي', hours: '9ص-9م', status: '✅ متاح' },
+  { id: 21, name: 'شركة برودة للتكييف', cat: 'خدمات المنزل', type: 'تكييف وصيانة', area: 'البريمي', hours: '8ص-8م', status: '✅ متاح' },
+  { id: 22, name: 'Buraimi Municipality', cat: 'جهات مهمة', type: 'بلدية', area: 'البريمي', hours: '7:30ص-2:30م', status: '✅ مفتوح' },
+  { id: 23, name: 'شرطة البريمي', cat: 'جهات مهمة', type: 'أمن وشرطة', area: 'البريمي', hours: '24 ساعة', status: '✅ دائم' },
+  { id: 24, name: 'بنك مسقط - البريمي', cat: 'جهات مهمة', type: 'بنك', area: 'البريمي', hours: '8ص-2م', status: '✅ مفتوح' },
+  { id: 25, name: 'هيئة الكهرباء والمياه', cat: 'جهات مهمة', type: 'خدمات عامة', area: 'البريمي', hours: '7:30ص-2:30م', status: '✅ مفتوح' },
+  { id: 26, name: 'Al Khandaq Fort', cat: 'السياحة والترفيه', type: 'قلعة تاريخية', area: 'البريمي', hours: '8ص-6م', status: '✅ مفتوح' },
+  { id: 27, name: 'سوق البريمي الشعبي', cat: 'السياحة والترفيه', type: 'سوق تراثي', area: 'وسط البريمي', hours: '8ص-12م | 4م-10م', status: '✅ مفتوح' },
+  { id: 28, name: 'فلج المسفاة', cat: 'السياحة والترفيه', type: 'فلج تراثي', area: 'البريمي', hours: 'طوال اليوم', status: '✅ متاح' },
+  { id: 29, name: 'جبل الحفيت', cat: 'السياحة والترفيه', type: 'جبل سياحي', area: 'قرب البريمي', hours: 'طوال اليوم', status: '✅ متاح' },
+  { id: 30, name: 'Oasis Garden Hotel', cat: 'السياحة والترفيه', type: 'فندق', area: 'البريمي', hours: '24 ساعة', status: '✅ مفتوح' }
+];
