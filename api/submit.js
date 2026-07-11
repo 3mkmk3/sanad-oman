@@ -5,6 +5,16 @@ function clean(v, max) {
   return typeof v === 'string' ? v.trim().slice(0, max) : '';
 }
 
+function cleanPhoto(v) {
+  const photo = clean(v, 250000);
+  if (!photo) return '';
+  if (/^https?:\/\//i.test(photo)) return photo.slice(0, 500);
+  if (/^data:image\/(?:png|jpe?g|webp);base64,[a-z0-9+/=]+$/i.test(photo) && photo.length <= 240000) {
+    return photo;
+  }
+  return '';
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -19,11 +29,10 @@ export default async function handler(req, res) {
   const wa      = clean(b.wa, 20);
   const hours   = clean(b.hours, 60);
   const desc    = clean(b.desc, 500);
-  // نقبل روابط الخرائط والصور التي تبدأ بـ http/https فقط
+  // نقبل روابط الخرائط فقط من http/https، والصورة إما رابط آمن أو صورة مضغوطة من المتصفح
   let map = clean(b.map, 300);
   if (map && !/^https?:\/\//i.test(map)) map = '';
-  let photo = clean(b.photo, 300);
-  if (photo && !/^https?:\/\//i.test(photo)) photo = '';
+  const photo = cleanPhoto(b.photo);
   const owner   = clean(b.owner, 100);
   const contact = clean(b.contact, 20);
 
