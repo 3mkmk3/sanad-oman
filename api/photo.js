@@ -56,7 +56,7 @@ export default async function handler(req, res) {
     return res.status(404).json({ error: 'Photos not configured' });
   }
 
-  const cacheKey = 'sanad:photo:' + encodeURIComponent(searchText.toLowerCase());
+  const cacheKey = 'sanad:photo:v2:' + encodeURIComponent(searchText.toLowerCase());
   try {
     const cached = await get(cacheKey);
     if (cached === 'none') {
