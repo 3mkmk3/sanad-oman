@@ -55,6 +55,32 @@ function normalizeReview(review) {
   };
 }
 
+function normalizeLegacyReview(review, placeUrl) {
+  return {
+    authorName: clean(review.author_name || 'مستخدم Google', 80),
+    authorUri: safeUrl(review.author_url),
+    authorPhotoUri: safeUrl(review.profile_photo_url),
+    rating: Number(review.rating) || 0,
+    text: clean(review.text, 1200),
+    relativeTime: clean(review.relative_time_description || '', 80),
+    googleMapsUri: placeUrl,
+    flagContentUri: ''
+  };
+}
+
+async function legacyDetails(key, placeId) {
+  const url = new URL('https://maps.googleapis.com/maps/api/place/details/json');
+  url.searchParams.set('place_id', placeId);
+  url.searchParams.set('fields', 'name,rating,user_ratings_total,reviews,url');
+  url.searchParams.set('language', 'ar');
+  url.searchParams.set('key', key);
+
+  const response = await fetch(url);
+  if (!response.ok) return null;
+  const data = await response.json();
+  return data.status === 'OK' && data.result ? data.result : null;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -125,15 +151,33 @@ export default async function handler(req, res) {
     }
 
     const place = await details.json();
+    const newReviews = Array.isArray(place.reviews) ? place.reviews.slice(0, 5).map(normalizeReview) : [];
+    let rating = typeof place.rating === 'number' ? Number(place.rating.toFixed(1)) : null;
+    let userRatingCount = Number(place.userRatingCount) || 0;
+    let googleMapsUri = safeUrl(place.googleMapsUri);
+    let reviews = newReviews;
+
+    if (!reviews.length && place.id) {
+      const legacy = await legacyDetails(key, place.id);
+      if (legacy) {
+        if (typeof legacy.rating === 'number') rating = Number(legacy.rating.toFixed(1));
+        userRatingCount = Number(legacy.user_ratings_total) || userRatingCount;
+        googleMapsUri = safeUrl(legacy.url) || googleMapsUri;
+        reviews = Array.isArray(legacy.reviews)
+          ? legacy.reviews.slice(0, 5).map(review => normalizeLegacyReview(review, googleMapsUri))
+          : reviews;
+      }
+    }
+
     const payload = {
       source: 'Google Maps',
       name: localizedText(place.displayName),
-      rating: typeof place.rating === 'number' ? Number(place.rating.toFixed(1)) : null,
-      userRatingCount: Number(place.userRatingCount) || 0,
-      googleMapsUri: safeUrl(place.googleMapsUri),
+      rating,
+      userRatingCount,
+      googleMapsUri,
       iconMaskBaseUri: safeUrl(place.iconMaskBaseUri),
       iconBackgroundColor: clean(place.iconBackgroundColor, 20),
-      reviews: Array.isArray(place.reviews) ? place.reviews.slice(0, 5).map(normalizeReview) : []
+      reviews
     };
 
     res.setHeader('Cache-Control', 'no-store');
