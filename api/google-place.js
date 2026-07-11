@@ -69,16 +69,20 @@ function normalizeLegacyReview(review, placeUrl) {
 }
 
 async function legacyDetails(key, placeId) {
-  const url = new URL('https://maps.googleapis.com/maps/api/place/details/json');
-  url.searchParams.set('place_id', placeId);
-  url.searchParams.set('fields', 'name,rating,user_ratings_total,reviews,url');
-  url.searchParams.set('language', 'ar');
-  url.searchParams.set('key', key);
+  try {
+    const url = new URL('https://maps.googleapis.com/maps/api/place/details/json');
+    url.searchParams.set('place_id', placeId);
+    url.searchParams.set('fields', 'name,rating,user_ratings_total,reviews,url');
+    url.searchParams.set('language', 'ar');
+    url.searchParams.set('key', key);
 
-  const response = await fetch(url);
-  if (!response.ok) return null;
-  const data = await response.json();
-  return data.status === 'OK' && data.result ? data.result : null;
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    const data = await response.json();
+    return data.status === 'OK' && data.result ? data.result : null;
+  } catch (err) {
+    return null;
+  }
 }
 
 export default async function handler(req, res) {
