@@ -710,7 +710,10 @@ function shareText(text) {
 // صورة المكان: رابط الصورة الخاص بالنشاط إن وُجد، وإلا من خرائط قوقل (عبر الخادم)،
 // وإن لم تتوفر أي صورة يبقى الحرف الأول
 function photoUrl(p) {
-  return safeImage(p.photo) || ('/api/photo?q=' + encodeURIComponent(p.en || p.name));
+  const params = new URLSearchParams();
+  params.set('q', p.en || p.name);
+  if (p.map) params.set('map', p.map);
+  return safeImage(p.photo) || ('/api/photo?' + params.toString());
 }
 // أيقونة القسم بدل الحرف الأول — شكل أوضح للأماكن التي بلا صورة
 const CAT_ICONS = {'الصحة':'🏥','السيارات':'🚗','المطاعم والمقاهي':'🍽️','خدمات المنزل':'🏠','جهات مهمة':'🏛️','السياحة والترفيه':'🏰','التسوق':'🛍️','مساجد':'🕌'};

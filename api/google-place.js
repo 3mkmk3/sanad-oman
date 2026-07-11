@@ -74,6 +74,8 @@ async function legacyDetails(key, placeId) {
     url.searchParams.set('place_id', placeId);
     url.searchParams.set('fields', 'name,rating,user_ratings_total,reviews,url');
     url.searchParams.set('language', 'ar');
+    url.searchParams.set('reviews_sort', 'newest');
+    url.searchParams.set('reviews_no_translations', 'false');
     url.searchParams.set('key', key);
 
     const response = await fetch(url);
@@ -134,7 +136,11 @@ export default async function handler(req, res) {
       await rememberPlaceName(cacheKey, placeName);
     }
 
-    const details = await fetch(`https://places.googleapis.com/v1/${placeName}`, {
+    const detailsUrl = new URL(`https://places.googleapis.com/v1/${placeName}`);
+    detailsUrl.searchParams.set('languageCode', 'ar');
+    detailsUrl.searchParams.set('regionCode', 'OM');
+
+    const details = await fetch(detailsUrl, {
       headers: {
         'X-Goog-Api-Key': key,
         'X-Goog-FieldMask': [
@@ -143,7 +149,12 @@ export default async function handler(req, res) {
           'rating',
           'userRatingCount',
           'googleMapsUri',
-          'reviews',
+          'reviews.authorAttribution',
+          'reviews.rating',
+          'reviews.text',
+          'reviews.relativePublishTimeDescription',
+          'reviews.googleMapsUri',
+          'reviews.flagContentUri',
           'iconMaskBaseUri',
           'iconBackgroundColor'
         ].join(',')
