@@ -7,8 +7,8 @@ const DAYS = [1, 2, 3, 5];
 const TRIPS = ['عائلة', 'أصدقاء', 'منفرد'];
 const INTERESTS = ['تاريخ وتراث', 'طبيعة وجبال', 'مطاعم وأكل', 'تسوق', 'عائلة وأطفال', 'استراحة وهدوء'];
 
-const BASE_TOUR = ['Al Khandaq Fort', 'سوق البريمي الشعبي', 'فلج المسفاة', 'جبل الحفيت', 'Oasis Garden Hotel'];
-const BASE_REST = ['Reef Restaurant', 'Al Yahar Restaurant', 'Oasis Cafe', 'مطعم البريمي العماني', 'مقهى النخيل'];
+const BASE_TOUR = ['Buraimi National Park', 'Al Khandaq Fort', 'Al Hillah Castle', 'Falaj Saraa', 'منتزه الواحة', 'جامع السلطان قابوس الكبير', 'سوق الجو الشعبي', 'البريمي سيتي سنتر', 'لولو هايبرماركت'];
+const BASE_REST = ['Sultan Karak', 'Nafhat Burger', 'رمال ضنك', 'SEKKA77 Restaurant', 'Line Cafe', 'دار الكرك', 'مخبز النيادي الحديث', 'The M Sweets'];
 
 // مخطط JSON يضمن أن يعيد النموذج جدولاً صالحاً دائماً (structured outputs)
 const PLAN_SCHEMA = {
