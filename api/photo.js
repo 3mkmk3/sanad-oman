@@ -56,18 +56,20 @@ export default async function handler(req, res) {
     return res.status(404).json({ error: 'Photos not configured' });
   }
 
-  const cacheKey = 'sanad:photo:v2:' + encodeURIComponent(searchText.toLowerCase());
-  try {
-    const cached = await get(cacheKey);
-    if (cached === 'none') {
-      return res.status(404).json({ error: 'No photo' });
-    }
-    if (cached) {
-      res.setHeader('Cache-Control', 'public, max-age=43200, s-maxage=43200');
-      res.setHeader('Location', cached);
-      return res.status(302).end();
-    }
-  } catch (err) {}
+  const cacheKey = 'sanad:photo:v3:' + encodeURIComponent(searchText.toLowerCase());
+  if (!req.query.debug) {
+    try {
+      const cached = await get(cacheKey);
+      if (cached === 'none') {
+        return res.status(404).json({ error: 'No photo' });
+      }
+      if (cached) {
+        res.setHeader('Cache-Control', 'public, max-age=43200, s-maxage=43200');
+        res.setHeader('Location', cached);
+        return res.status(302).end();
+      }
+    } catch (err) {}
+  }
 
   try {
     // 1) البحث عن المكان في خرائط قوقل باستخدام رابط الخريطة إن توفر لدقة أعلى
@@ -86,6 +88,13 @@ export default async function handler(req, res) {
       })
     });
     const sdata = await sr.json();
+    // فشل البحث ≠ لا توجد صورة: لا نخزن نتيجة سلبية عند خطأ من قوقل
+    if (!sr.ok) {
+      if (req.query.debug) {
+        return res.status(200).json({ step: 'search', status: sr.status, error: sdata.error || null });
+      }
+      return res.status(502).json({ error: 'Search failed' });
+    }
     const foundPlace = sdata.places && sdata.places[0] ? sdata.places[0] : null;
     let photoName =
       foundPlace && foundPlace.photos && foundPlace.photos[0]
@@ -119,6 +128,14 @@ export default async function handler(req, res) {
     }
 
     if (!photoName) {
+      if (req.query.debug) {
+        return res.status(200).json({
+          step: 'no-photo',
+          placeFound: !!foundPlace,
+          placeName: foundPlace ? foundPlace.name : '',
+          photosInSearch: foundPlace && foundPlace.photos ? foundPlace.photos.length : 0
+        });
+      }
       try { await setex(cacheKey, 86400, 'none'); } catch (err) {}
       return res.status(404).json({ error: 'No photo' });
     }
@@ -130,7 +147,12 @@ export default async function handler(req, res) {
     const mdata = await mr.json();
     const uri = mdata.photoUri || '';
     if (!uri) {
-      try { await setex(cacheKey, 86400, 'none'); } catch (err) {}
+      if (req.query.debug) {
+        return res.status(200).json({ step: 'media', status: mr.status, error: mdata.error || null });
+      }
+      if (mr.ok) {
+        try { await setex(cacheKey, 86400, 'none'); } catch (err) {}
+      }
       return res.status(404).json({ error: 'No photo' });
     }
 

@@ -109,7 +109,7 @@ export default async function handler(req, res) {
   }
 
   // نعيد النتيجة المخزنة (12 ساعة) بدل استدعاء Google في كل زيارة — توفير كبير في التكلفة
-  const payloadKey = 'sanad:gplace:' + encodeURIComponent(searchText.toLowerCase());
+  const payloadKey = 'sanad:gplace:v2:' + encodeURIComponent(searchText.toLowerCase());
   if (!req.query.debug) {
     try {
       const cachedPayload = await get(payloadKey);
@@ -173,12 +173,7 @@ export default async function handler(req, res) {
           'rating',
           'userRatingCount',
           'googleMapsUri',
-          'reviews.authorAttribution',
-          'reviews.rating',
-          'reviews.text',
-          'reviews.relativePublishTimeDescription',
-          'reviews.googleMapsUri',
-          'reviews.flagContentUri',
+          'reviews',
           'iconMaskBaseUri',
           'iconBackgroundColor'
         ].join(',')
