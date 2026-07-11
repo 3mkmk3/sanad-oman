@@ -79,11 +79,15 @@ async function legacyDetails(key, placeId) {
     url.searchParams.set('key', key);
 
     const response = await fetch(url);
-    if (!response.ok) return null;
+    if (!response.ok) return { status: 'HTTP_' + response.status, result: null };
     const data = await response.json();
-    return data.status === 'OK' && data.result ? data.result : null;
+    return {
+      status: data.status || '',
+      errorMessage: clean(data.error_message || '', 200),
+      result: data.status === 'OK' && data.result ? data.result : null
+    };
   } catch (err) {
-    return null;
+    return { status: 'FETCH_ERROR', result: null };
   }
 }
 
@@ -171,15 +175,19 @@ export default async function handler(req, res) {
     let userRatingCount = Number(place.userRatingCount) || 0;
     let googleMapsUri = safeUrl(place.googleMapsUri);
     let reviews = newReviews;
+    let legacyStatus = '';
+    let legacyError = '';
 
     if (!reviews.length && place.id) {
       const legacy = await legacyDetails(key, place.id);
-      if (legacy) {
-        if (typeof legacy.rating === 'number') rating = Number(legacy.rating.toFixed(1));
-        userRatingCount = Number(legacy.user_ratings_total) || userRatingCount;
-        googleMapsUri = safeUrl(legacy.url) || googleMapsUri;
-        reviews = Array.isArray(legacy.reviews)
-          ? legacy.reviews.slice(0, 5).map(review => normalizeLegacyReview(review, googleMapsUri))
+      legacyStatus = legacy ? legacy.status : '';
+      legacyError = legacy ? legacy.errorMessage || '' : '';
+      if (legacy && legacy.result) {
+        if (typeof legacy.result.rating === 'number') rating = Number(legacy.result.rating.toFixed(1));
+        userRatingCount = Number(legacy.result.user_ratings_total) || userRatingCount;
+        googleMapsUri = safeUrl(legacy.result.url) || googleMapsUri;
+        reviews = Array.isArray(legacy.result.reviews)
+          ? legacy.result.reviews.slice(0, 5).map(review => normalizeLegacyReview(review, googleMapsUri))
           : reviews;
       }
     }
@@ -194,6 +202,14 @@ export default async function handler(req, res) {
       iconBackgroundColor: clean(place.iconBackgroundColor, 20),
       reviews
     };
+    if (req.query.debug) {
+      payload.debug = {
+        newReviewCount: newReviews.length,
+        legacyStatus,
+        legacyError,
+        finalReviewCount: reviews.length
+      };
+    }
 
     res.setHeader('Cache-Control', 'no-store');
     return res.status(200).json(payload);

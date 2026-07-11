@@ -59,10 +59,27 @@ export default async function handler(req, res) {
       })
     });
     const sdata = await sr.json();
-    const photoName =
-      sdata.places && sdata.places[0] && sdata.places[0].photos && sdata.places[0].photos[0]
-        ? sdata.places[0].photos[0].name
+    const foundPlace = sdata.places && sdata.places[0] ? sdata.places[0] : null;
+    let photoName =
+      foundPlace && foundPlace.photos && foundPlace.photos[0]
+        ? foundPlace.photos[0].name
         : '';
+
+    if (!photoName && foundPlace && foundPlace.name) {
+      const detailsUrl = new URL(`https://places.googleapis.com/v1/${foundPlace.name}`);
+      detailsUrl.searchParams.set('languageCode', 'ar');
+      detailsUrl.searchParams.set('regionCode', 'OM');
+      const dr = await fetch(detailsUrl, {
+        headers: {
+          'X-Goog-Api-Key': key,
+          'X-Goog-FieldMask': 'photos'
+        }
+      });
+      if (dr.ok) {
+        const ddata = await dr.json();
+        photoName = ddata.photos && ddata.photos[0] ? ddata.photos[0].name : '';
+      }
+    }
 
     if (!photoName) {
       try { await setex(cacheKey, 86400, 'none'); } catch (err) {}
