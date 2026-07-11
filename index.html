@@ -176,6 +176,20 @@ button,a{font:inherit;border:0;cursor:pointer;text-decoration:none;}
 .rv-input{width:100%;padding:10px 12px;border-radius:12px;border:1.5px solid var(--line);font:inherit;font-size:13px;color:var(--ink);background:#fff;outline:none;margin-bottom:8px;transition:border .2s;}
 .rv-input:focus{border-color:var(--green);}
 textarea.rv-input{resize:vertical;min-height:58px;}
+.google-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;}
+.gmp-attribution{font-family:Roboto,Arial,sans-serif;font-size:12px;font-weight:400;color:#5E5E5E;white-space:nowrap;}
+.google-rating{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#f7faf9;border:1px solid var(--line);border-radius:14px;padding:11px 12px;margin-bottom:10px;}
+.google-rating strong{font-size:22px;color:var(--green-deep);}
+.google-rating small{font-size:12px;color:var(--muted);text-align:left;}
+.google-link{display:inline-flex;justify-content:center;width:100%;margin-top:8px;padding:10px 12px;border-radius:13px;background:var(--green-lt);color:var(--green-deep);font-size:13px;font-weight:800;}
+.g-review{border-bottom:1px dashed var(--line);padding:10px 0;}
+.g-review:last-child{border-bottom:none;}
+.g-review-author{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.g-review-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;background:#eef3f1;flex:0 0 28px;}
+.g-review-name{font-size:13px;font-weight:800;color:var(--ink);}
+.g-review-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:11.5px;margin-bottom:5px;}
+.g-review-links{display:flex;gap:10px;flex-wrap:wrap;margin-top:5px;font-size:11.5px;font-weight:700;}
+.g-review-links a{color:var(--green-deep);}
 .no-rv{text-align:center;color:var(--muted);font-size:12.5px;padding:12px 0;}
 
 /* ===== اسأل سند ===== */
@@ -480,8 +494,8 @@ textarea.rv-input{resize:vertical;min-height:58px;}
         </div>
 
         <div class="field-group">
-          <label>رابط صورة النشاط</label>
-          <input id="f_photo" type="url" placeholder="https://... (اختياري — صورة واضحة لمحلك)"/>
+          <label>رابط صورة أو شعار النشاط</label>
+          <input id="f_photo" type="url" placeholder="https://... (اختياري — صورة واضحة أو شعار لمحلك)"/>
         </div>
 
         <div class="field-group">
@@ -758,6 +772,13 @@ function goDetail(id) {
       <button class="share-btn" onclick="sharePlace('${esc(p.id)}')">📤 مشاركة المكان</button>
     </div>
     <div class="d-card" style="margin-top:12px">
+      <div class="google-head">
+        <strong style="font-size:14px">⭐ تقييمات Google</strong>
+        <span class="gmp-attribution" translate="no">Google Maps</span>
+      </div>
+      <div id="googleBox"><div class="no-rv">جارِ تحميل بيانات Google...</div></div>
+    </div>
+    <div class="d-card" style="margin-top:12px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
         <strong style="font-size:14px">⭐ التقييمات والآراء</strong>
         <small id="rvAvg" class="muted"></small>
@@ -773,6 +794,7 @@ function goDetail(id) {
         <button class="submit-btn" style="margin-top:2px;padding:12px;font-size:14px" onclick="submitReview('${esc(p.id)}', this)">إرسال التقييم</button>
       </div>
     </div>`;
+  loadGooglePlace(p);
   loadReviews(p.id);
   goScreen('detail');
 }
@@ -781,6 +803,61 @@ let rvSelected = 5;
 function setRvStars(n) {
   rvSelected = n;
   document.querySelectorAll('.rv-star-btn').forEach(b => b.classList.toggle('active', Number(b.dataset.n) <= n));
+}
+
+function googleStars(value) {
+  const n = Math.max(0, Math.min(5, Math.round(Number(value) || 0)));
+  return '★'.repeat(n) + '☆'.repeat(5 - n);
+}
+
+function renderGoogleReview(r, placeUrl) {
+  const authorUrl = safeUrl(r.authorUri);
+  const reviewUrl = safeUrl(r.googleMapsUri) || placeUrl;
+  const reportUrl = safeUrl(r.flagContentUri);
+  const authorName = esc(r.authorName || 'مستخدم Google');
+  const author = authorUrl
+    ? `<a class="g-review-name" href="${esc(authorUrl)}" target="_blank" rel="noopener">${authorName}</a>`
+    : `<strong class="g-review-name">${authorName}</strong>`;
+  const avatar = safeUrl(r.authorPhotoUri)
+    ? `<img class="g-review-avatar" src="${esc(r.authorPhotoUri)}" alt="" onerror="this.remove()"/>`
+    : `<span class="g-review-avatar" aria-hidden="true"></span>`;
+  const links = [reviewUrl ? `<a href="${esc(reviewUrl)}" target="_blank" rel="noopener">عرض في Google Maps</a>` : '', reportUrl ? `<a href="${esc(reportUrl)}" target="_blank" rel="noopener">الإبلاغ</a>` : ''].filter(Boolean).join('');
+  return `
+    <div class="g-review">
+      <div class="g-review-author">${avatar}${author}</div>
+      <div class="g-review-meta"><span class="rv-st">${googleStars(r.rating)}</span>${r.relativeTime ? `<span>${esc(r.relativeTime)}</span>` : ''}</div>
+      ${r.text ? `<div class="rv-txt">${esc(r.text)}</div>` : ''}
+      ${links ? `<div class="g-review-links">${links}</div>` : ''}
+    </div>`;
+}
+
+function renderGooglePlace(data) {
+  const placeUrl = safeUrl(data.googleMapsUri);
+  const countText = data.userRatingCount ? `${esc(data.userRatingCount)} مراجعة على Google` : 'عدد المراجعات غير متوفر';
+  const rating = data.rating
+    ? `<div class="google-rating"><strong>⭐ ${esc(data.rating)}</strong><small>${countText}</small></div>`
+    : '<div class="no-rv">لا يوجد تقييم Google متاح لهذا المكان حالياً</div>';
+  const reviews = data.reviews && data.reviews.length
+    ? data.reviews.map(r => renderGoogleReview(r, placeUrl)).join('')
+    : '<div class="no-rv">لا توجد مراجعات Google متاحة للعرض حالياً</div>';
+  const link = placeUrl ? `<a class="google-link" href="${esc(placeUrl)}" target="_blank" rel="noopener">فتح الصفحة في Google Maps</a>` : '';
+  return `${rating}${reviews}${link}`;
+}
+
+async function loadGooglePlace(p) {
+  const box = document.getElementById('googleBox');
+  if (!box) return;
+  const params = new URLSearchParams();
+  params.set('q', p.en || p.name);
+  if (p.map) params.set('map', p.map);
+  try {
+    const res = await fetch('/api/google-place?' + params.toString());
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || '');
+    box.innerHTML = renderGooglePlace(data);
+  } catch (err) {
+    box.innerHTML = '<div class="no-rv">تقييمات Google غير متوفرة الآن</div>';
+  }
 }
 
 async function loadReviews(id) {
