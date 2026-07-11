@@ -247,8 +247,11 @@ export default async function handler(req, res) {
       };
       payload.debug.probes = [
         await probe('reviews', ''),
-        await probe('reviews', 'ar'),
-        await probe('photos', '')
+        await probe('photos', ''),
+        await probe('internationalPhoneNumber', ''),
+        await probe('websiteUri', ''),
+        await probe('regularOpeningHours', ''),
+        await probe('rating', '')
       ];
     }
 
