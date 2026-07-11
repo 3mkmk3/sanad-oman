@@ -760,7 +760,7 @@ function goDetail(id) {
         <div class="info-box"><small>القسم</small><strong>${esc(p.cat)}</strong></div>
         <div class="info-box"><small>النوع</small><strong>${esc(p.type)}</strong></div>
         <div class="info-box"><small>المنطقة</small><strong>${esc(p.area)}</strong></div>
-        <div class="info-box"><small>ساعات العمل</small><strong>${esc(p.hours || 'غير متوفرة')}</strong></div>
+        ${p.cat === 'مساجد' ? '' : `<div class="info-box"><small>ساعات العمل</small><strong>${esc(p.hours || 'غير متوفرة')}</strong></div>`}
       </div>
       <div class="actions">${callBtn}${waBtn}${mapBtn}</div>
       <button class="share-btn" onclick="sharePlace('${esc(p.id)}')">📤 مشاركة المكان</button>
