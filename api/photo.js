@@ -71,7 +71,18 @@ export default async function handler(req, res) {
     } catch (err) {}
   }
 
+  // نعيد استخدام معرّف المكان المخزن من google-place.js لتوفير حصة البحث اليومية
+  const gpidKey = 'sanad:gpid:' + encodeURIComponent(searchText.toLowerCase());
+  let cachedName = '';
   try {
+    const g = await get(gpidKey);
+    if (typeof g === 'string' && g.startsWith('places/')) cachedName = g;
+  } catch (err) {}
+
+  try {
+    let foundPlace = cachedName ? { name: cachedName, id: cachedName.slice(7), photos: null } : null;
+
+    if (!foundPlace) {
     // 1) البحث عن المكان في خرائط قوقل باستخدام رابط الخريطة إن توفر لدقة أعلى
     const sr = await fetch('https://places.googleapis.com/v1/places:searchText', {
       method: 'POST',
@@ -95,7 +106,12 @@ export default async function handler(req, res) {
       }
       return res.status(502).json({ error: 'Search failed' });
     }
-    const foundPlace = sdata.places && sdata.places[0] ? sdata.places[0] : null;
+    foundPlace = sdata.places && sdata.places[0] ? sdata.places[0] : null;
+    if (foundPlace && typeof foundPlace.name === 'string' && foundPlace.name.startsWith('places/')) {
+      try { await setex(gpidKey, 60 * 60 * 24 * 30, foundPlace.name); } catch (err) {}
+    }
+    }
+
     let photoName =
       foundPlace && foundPlace.photos && foundPlace.photos[0]
         ? foundPlace.photos[0].name
