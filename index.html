@@ -895,7 +895,14 @@ function renderGoogleSummary(data) {
   const countText = data.userRatingCount ? `${esc(data.userRatingCount)} مراجعة على Google` : 'عدد المراجعات غير متوفر';
   if (!data.rating) return '<small>تقييم Google غير متوفر حالياً</small>';
   const link = placeUrl ? `<a href="${esc(placeUrl)}" target="_blank" rel="noopener" style="color:var(--green-deep);font-weight:800">فتح في Google Maps</a>` : '';
-  return `<strong>⭐ ${esc(data.rating)}</strong><small>${countText}${link ? ` · ${link}` : ''}</small>`;
+  const phoneDigits = String(data.phone || '').replace(/[^\d+]/g, '');
+  const phoneLine = data.phone
+    ? `<small>📞 <a href="tel:${esc(phoneDigits)}" style="color:var(--green-deep);font-weight:800" dir="ltr">${esc(data.phone)}</a> <span style="opacity:.7">(من Google Maps)</span></small>`
+    : '';
+  const hoursLine = data.openingHours && data.openingHours.length
+    ? `<small>🕐 ${esc(data.openingHours[0])}</small>`
+    : '';
+  return `<strong>⭐ ${esc(data.rating)}</strong><small>${countText}${link ? ` · ${link}` : ''}</small>${phoneLine}${hoursLine}`;
 }
 
 function renderGoogleReviews(data) {

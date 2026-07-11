@@ -109,7 +109,7 @@ export default async function handler(req, res) {
   }
 
   // نعيد النتيجة المخزنة (12 ساعة) بدل استدعاء Google في كل زيارة — توفير كبير في التكلفة
-  const payloadKey = 'sanad:gplace:v2:' + encodeURIComponent(searchText.toLowerCase());
+  const payloadKey = 'sanad:gplace:v3:' + encodeURIComponent(searchText.toLowerCase());
   if (!req.query.debug) {
     try {
       const cachedPayload = await get(payloadKey);
@@ -174,6 +174,9 @@ export default async function handler(req, res) {
           'userRatingCount',
           'googleMapsUri',
           'reviews',
+          'nationalPhoneNumber',
+          'internationalPhoneNumber',
+          'regularOpeningHours.weekdayDescriptions',
           'iconMaskBaseUri',
           'iconBackgroundColor'
         ].join(',')
@@ -213,6 +216,10 @@ export default async function handler(req, res) {
       rating,
       userRatingCount,
       googleMapsUri,
+      phone: clean(place.nationalPhoneNumber || place.internationalPhoneNumber || '', 25),
+      openingHours: place.regularOpeningHours && Array.isArray(place.regularOpeningHours.weekdayDescriptions)
+        ? place.regularOpeningHours.weekdayDescriptions.slice(0, 7).map(d => clean(d, 80))
+        : [],
       iconMaskBaseUri: safeUrl(place.iconMaskBaseUri),
       iconBackgroundColor: clean(place.iconBackgroundColor, 20),
       reviews,
