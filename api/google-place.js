@@ -229,6 +229,27 @@ export default async function handler(req, res) {
         legacyError,
         finalReviewCount: reviews.length
       };
+      // فحوصات مباشرة: حقل واحد في كل طلب، مع وبدون تحديد اللغة
+      const probe = async (mask, lang) => {
+        try {
+          const u = new URL(`https://places.googleapis.com/v1/${placeName}`);
+          if (lang) u.searchParams.set('languageCode', lang);
+          const r2 = await fetch(u, { headers: { 'X-Goog-Api-Key': key, 'X-Goog-FieldMask': mask } });
+          const j2 = await r2.json().catch(() => ({}));
+          return {
+            mask, lang: lang || 'none', status: r2.status,
+            count: Array.isArray(j2[mask]) ? j2[mask].length : (j2[mask] !== undefined ? 1 : 0),
+            error: j2.error ? String(j2.error.message || '').slice(0, 180) : ''
+          };
+        } catch (err) {
+          return { mask, lang: lang || 'none', status: 'FETCH_ERROR' };
+        }
+      };
+      payload.debug.probes = [
+        await probe('reviews', ''),
+        await probe('reviews', 'ar'),
+        await probe('photos', '')
+      ];
     }
 
     res.setHeader('Cache-Control', 'public, max-age=1800, s-maxage=3600');
