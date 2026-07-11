@@ -1,4 +1,4 @@
-import { get, setex } from './_kv.js';
+import { get, setex, rateLimit } from './_kv.js';
 
 const PLACE_ID_TTL_SECONDS = 60 * 60 * 24 * 30;
 
@@ -108,6 +108,26 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Missing q' });
   }
 
+  // نعيد النتيجة المخزنة (12 ساعة) بدل استدعاء Google في كل زيارة — توفير كبير في التكلفة
+  const payloadKey = 'sanad:gplace:' + encodeURIComponent(searchText.toLowerCase());
+  if (!req.query.debug) {
+    try {
+      const cachedPayload = await get(payloadKey);
+      if (cachedPayload) {
+        res.setHeader('Cache-Control', 'public, max-age=1800, s-maxage=3600');
+        return res.status(200).json(JSON.parse(cachedPayload));
+      }
+    } catch (err) {}
+  }
+
+  // حد أقصى لاستدعاءات Google غير المخزنة لكل زائر — حماية لرصيدك من الإسراف
+  const ip = ((req.headers['x-forwarded-for'] || '').split(',')[0] || '').trim() || 'unknown';
+  try {
+    if (!(await rateLimit(`sanad:rl:gplace:${ip}`, 60, 3600))) {
+      return res.status(429).json({ error: 'Too many requests' });
+    }
+  } catch (err) {}
+
   const cacheKey = 'sanad:gpid:' + encodeURIComponent(searchText.toLowerCase());
   let placeName = await cachedPlaceName(cacheKey);
 
@@ -205,6 +225,8 @@ export default async function handler(req, res) {
         ? (legacyStatus === 'REQUEST_DENIED' ? 'legacy_api_disabled' : 'not_returned_by_google')
         : ''
     };
+    try { await setex(payloadKey, 43200, JSON.stringify(payload)); } catch (err) {}
+
     if (req.query.debug) {
       payload.debug = {
         newReviewCount: newReviews.length,
@@ -214,7 +236,7 @@ export default async function handler(req, res) {
       };
     }
 
-    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Cache-Control', 'public, max-age=1800, s-maxage=3600');
     return res.status(200).json(payload);
   } catch (err) {
     return res.status(502).json({ error: 'Google Places service error' });
