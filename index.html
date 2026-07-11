@@ -902,7 +902,9 @@ function renderGoogleReviews(data) {
   const placeUrl = safeUrl(data.googleMapsUri);
   const reviews = data.reviews && data.reviews.length
     ? data.reviews.map(r => renderGoogleReview(r, placeUrl)).join('')
-    : '<div class="no-rv">لا توجد مراجعات Google متاحة للعرض حالياً</div>';
+    : data.userRatingCount
+      ? `<div class="no-rv">يوجد ${esc(data.userRatingCount)} مراجعة في Google Maps، لكن نصوص المراجعات لم تصل من Google API حالياً</div>`
+      : '<div class="no-rv">لا توجد مراجعات Google متاحة للعرض حالياً</div>';
   const link = placeUrl ? `<a class="google-link" href="${esc(placeUrl)}" target="_blank" rel="noopener">فتح الصفحة في Google Maps</a>` : '';
   return `${reviews}${link}`;
 }

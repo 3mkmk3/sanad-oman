@@ -200,7 +200,10 @@ export default async function handler(req, res) {
       googleMapsUri,
       iconMaskBaseUri: safeUrl(place.iconMaskBaseUri),
       iconBackgroundColor: clean(place.iconBackgroundColor, 20),
-      reviews
+      reviews,
+      reviewsUnavailableReason: !reviews.length && userRatingCount
+        ? (legacyStatus === 'REQUEST_DENIED' ? 'legacy_api_disabled' : 'not_returned_by_google')
+        : ''
     };
     if (req.query.debug) {
       payload.debug = {

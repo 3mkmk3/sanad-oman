@@ -16,6 +16,33 @@ function queryFromMapUrl(value) {
   }
 }
 
+async function legacyPhotoUri(key, placeId) {
+  try {
+    const detailsUrl = new URL('https://maps.googleapis.com/maps/api/place/details/json');
+    detailsUrl.searchParams.set('place_id', placeId);
+    detailsUrl.searchParams.set('fields', 'photo');
+    detailsUrl.searchParams.set('language', 'ar');
+    detailsUrl.searchParams.set('key', key);
+
+    const details = await fetch(detailsUrl);
+    if (!details.ok) return '';
+    const data = await details.json();
+    const ref = data.status === 'OK' && data.result && data.result.photos && data.result.photos[0]
+      ? data.result.photos[0].photo_reference
+      : '';
+    if (!ref) return '';
+
+    const photoUrl = new URL('https://maps.googleapis.com/maps/api/place/photo');
+    photoUrl.searchParams.set('maxwidth', '800');
+    photoUrl.searchParams.set('photo_reference', ref);
+    photoUrl.searchParams.set('key', key);
+    const photo = await fetch(photoUrl, { redirect: 'manual' });
+    return photo.headers.get('location') || '';
+  } catch (err) {
+    return '';
+  }
+}
+
 export default async function handler(req, res) {
   const q = clean(req.query.q, 140);
   const mapQuery = queryFromMapUrl(clean(req.query.map, 500));
@@ -49,7 +76,7 @@ export default async function handler(req, res) {
       headers: {
         'Content-Type': 'application/json',
         'X-Goog-Api-Key': key,
-        'X-Goog-FieldMask': 'places.photos'
+        'X-Goog-FieldMask': 'places.id,places.name,places.photos'
       },
       body: JSON.stringify({
         textQuery: `${searchText} البريمي عمان`,
@@ -78,6 +105,16 @@ export default async function handler(req, res) {
       if (dr.ok) {
         const ddata = await dr.json();
         photoName = ddata.photos && ddata.photos[0] ? ddata.photos[0].name : '';
+      }
+    }
+
+    if (!photoName && foundPlace && foundPlace.id) {
+      const legacyUri = await legacyPhotoUri(key, foundPlace.id);
+      if (legacyUri) {
+        try { await setex(cacheKey, 43200, legacyUri); } catch (err) {}
+        res.setHeader('Cache-Control', 'public, max-age=43200, s-maxage=43200');
+        res.setHeader('Location', legacyUri);
+        return res.status(302).end();
       }
     }
 
