@@ -99,6 +99,7 @@ body.welcome-open{overflow:hidden;}
 .av{width:46px;height:46px;border-radius:15px;background:linear-gradient(140deg,#e4f2ed,#d5eae2);color:var(--green-deep);display:grid;place-items:center;font-weight:800;font-size:17px;flex-shrink:0;}
 .logo-tile{width:58px;height:58px;border-radius:16px;background:#fff;border:1px solid rgba(230,235,232,.9);box-shadow:0 7px 18px rgba(31,42,39,.08);font-size:22px;}
 .logo-fallback{position:relative;z-index:1;}
+.logo-tile.has-img .logo-fallback{display:none;}
 .place-main{min-width:0;flex:1;}
 .place-main strong{white-space:normal;line-height:1.35;}
 .place-badges{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:2px;padding-right:70px;}
@@ -754,9 +755,14 @@ const places = [
   {id:150,name:"مصل هاوس للمكملات الغذائية البريمي",en:"Muscle House Nutrition Store",cat:"التسوق",type:"مكملات غذائية",area:"البريمي",hours:"",phone:"",wa:"",status:"⭐ 5 قوقل",map:"https://www.google.com/maps/search/?api=1&query=Muscle%20House%20Nutrition%20Store%2C%20Old%20Khadra%2C%20Al%20Buraimi%20512%2C%20Oman",desc:"مصل هاوس للمكملات الغذائية والتغذية الرياضية. تقييم قوقل 5 من 102 مراجعة."},
 ];
 
+const MOH_LOGO = 'https://moh.gov.om/media/kvpb5xtu/moh-logo-2.png';
+const ROP_LOGO = 'https://upload.wikimedia.org/wikipedia/en/d/d1/ROP_-_Logo.jpg';
+const BURAIMI_GOV_LOGO = 'https://bur.gov.om/assets/images/logo/main-logo.png';
+const NAMA_DISTRIBUTION_LOGO = 'https://www.nama.om/media/hhqo2wsx/ng-ds-logo.svg?rmode=pad&rnd=133270803918700000';
+
 const emergencies = [
-  {name:'الشرطة',phone:'9999',desc:'للحالات الأمنية والطارئة',logo:'https://upload.wikimedia.org/wikipedia/en/d/d1/ROP_-_Logo.jpg'},
-  {name:'الإسعاف',phone:'9999',desc:'للحالات الصحية العاجلة',logo:'https://upload.wikimedia.org/wikipedia/commons/a/a9/Civil_Defence_and_Ambulance_Authority_of_Oman_Logo.png'},
+  {name:'الشرطة',phone:'9999',desc:'للحالات الأمنية والطارئة',logo:ROP_LOGO},
+  {name:'الإسعاف',phone:'9999',desc:'للحالات الصحية العاجلة',logo:MOH_LOGO},
   {name:'الدفاع المدني',phone:'9999',desc:'حرائق وإنقاذ وحوادث',logo:'https://upload.wikimedia.org/wikipedia/commons/a/a9/Civil_Defence_and_Ambulance_Authority_of_Oman_Logo.png'},
 ];
 
@@ -791,8 +797,12 @@ function photoUrl(p) {
 // أيقونة القسم بدل الحرف الأول — شكل أوضح للأماكن التي بلا صورة
 const CAT_ICONS = {'الصحة':'🏥','السيارات':'🚗','المطاعم والمقاهي':'🍽️','خدمات المنزل':'🏠','جهات مهمة':'🏛️','السياحة والترفيه':'🏰','التسوق':'🛍️','مساجد':'🕌'};
 const PLACE_LOGOS = {
+  4: MOH_LOGO,
   12: 'https://assets.oq.com/dist/images/oq-logo.svg?v=b392d8916ca8d1a12d5b90e318209933',
+  22: BURAIMI_GOV_LOGO,
+  23: ROP_LOGO,
   24: 'https://upload.wikimedia.org/wikipedia/en/6/65/Bank_Muscat_logo.svg',
+  25: NAMA_DISTRIBUTION_LOGO,
   143: 'https://upload.wikimedia.org/wikipedia/commons/a/ab/Lulu_Hypermarket_logo.png'
 };
 function logoUrl(p) {
@@ -803,8 +813,8 @@ function avatar(p) {
   const photo = safeImage(p.photo);
   const src = logo || photo;
   const cls = logo ? 'av-img brand-logo-img' : 'av-img';
-  const img = src ? `<img class="${cls}" src="${src}" alt="" onerror="this.remove()"/>` : '';
-  return `<div class="av logo-tile"><span class="logo-fallback">${CAT_ICONS[p.cat] || esc(p.name[0])}</span>${img}</div>`;
+  const img = src ? `<img class="${cls}" src="${esc(src)}" alt="" onerror="this.parentElement.classList.remove('has-img');this.remove()"/>` : '';
+  return `<div class="av logo-tile${src ? ' has-img' : ''}"><span class="logo-fallback">${CAT_ICONS[p.cat] || esc(p.name[0])}</span>${img}</div>`;
 }
 function placeCard(p) {
   const dist = distanceBadge(p);
@@ -1158,7 +1168,7 @@ function renderFeatured() {
 function renderEmergency() {
   document.getElementById('emergencyList').innerHTML = emergencies.map(e => `
     <div class="ep">
-      <div class="row"><div class="av logo-tile"><span class="logo-fallback">${esc(e.name[0])}</span>${safeImage(e.logo) ? `<img class="av-img brand-logo-img" src="${esc(e.logo)}" alt="" onerror="this.remove()"/>` : ''}</div><div><strong>${e.name}</strong><div class="muted">${e.desc}</div></div></div>
+      <div class="row"><div class="av logo-tile${safeImage(e.logo) ? ' has-img' : ''}"><span class="logo-fallback">${esc(e.name[0])}</span>${safeImage(e.logo) ? `<img class="av-img brand-logo-img" src="${esc(e.logo)}" alt="" onerror="this.parentElement.classList.remove('has-img');this.remove()"/>` : ''}</div><div><strong>${e.name}</strong><div class="muted">${e.desc}</div></div></div>
       <div class="actions" style="margin-top:10px"><a class="action call" href="tel:${e.phone}">اتصال</a><span class="action">${e.phone}</span><span class="action">رسمي</span></div>
     </div>`).join('');
 }
