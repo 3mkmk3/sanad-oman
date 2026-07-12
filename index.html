@@ -188,6 +188,7 @@ body.welcome-open{overflow:hidden;}
 /* ===== صور الأماكن ===== */
 .av{position:relative;overflow:hidden;}
 .av-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit;}
+.brand-logo-img{object-fit:contain;padding:7px;background:#fff;}
 .d-hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
 .d-hero-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,63,52,.15),rgba(8,47,38,.85));}
 
@@ -789,8 +790,20 @@ function photoUrl(p) {
 }
 // أيقونة القسم بدل الحرف الأول — شكل أوضح للأماكن التي بلا صورة
 const CAT_ICONS = {'الصحة':'🏥','السيارات':'🚗','المطاعم والمقاهي':'🍽️','خدمات المنزل':'🏠','جهات مهمة':'🏛️','السياحة والترفيه':'🏰','التسوق':'🛍️','مساجد':'🕌'};
+const PLACE_LOGOS = {
+  12: 'https://assets.oq.com/dist/images/oq-logo.svg?v=b392d8916ca8d1a12d5b90e318209933',
+  23: 'https://upload.wikimedia.org/wikipedia/en/d/d1/ROP_-_Logo.jpg',
+  24: 'https://upload.wikimedia.org/wikipedia/en/6/65/Bank_Muscat_logo.svg',
+  143: 'https://upload.wikimedia.org/wikipedia/commons/a/ab/Lulu_Hypermarket_logo.png'
+};
+function logoUrl(p) {
+  return safeImage(p.logo) || safeImage(PLACE_LOGOS[p.id]);
+}
 function avatar(p) {
-  return `<div class="av logo-tile"><span class="logo-fallback">${CAT_ICONS[p.cat] || esc(p.name[0])}</span><img class="av-img" src="${photoUrl(p)}" alt="" onerror="this.remove()"/></div>`;
+  const logo = logoUrl(p);
+  const src = logo || photoUrl(p);
+  const cls = logo ? 'av-img brand-logo-img' : 'av-img';
+  return `<div class="av logo-tile"><span class="logo-fallback">${CAT_ICONS[p.cat] || esc(p.name[0])}</span><img class="${cls}" src="${src}" alt="" onerror="this.remove()"/></div>`;
 }
 function placeCard(p) {
   const dist = distanceBadge(p);
