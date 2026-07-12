@@ -131,8 +131,14 @@ button,a{font:inherit;border:0;cursor:pointer;text-decoration:none;}
 .alert-box{background:#fdf8ec;border:1px solid #f0e2bd;border-radius:17px;padding:14px;margin-bottom:10px;box-shadow:var(--shadow-sm);}
 .alert-box.info{background:#eef4fb;border-color:#d4e3f5;}
 .alert-box.warn{background:#fdf4ec;border-color:#f2ddc4;}
+.alert-box.danger{background:var(--rose-bg);border-color:var(--rose-line);}
 .alert-box strong{font-size:14px;display:block;margin-bottom:3px;}
 .alert-box .muted{color:var(--muted);font-size:12px;line-height:1.5;margin-top:0;}
+.alert-box .a-date{display:block;font-size:11px;color:var(--muted);margin-top:6px;}
+.alert-lvl{display:inline-block;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:99px;margin-bottom:6px;}
+.alert-lvl.lvl-emergency{background:var(--rose-bg);color:#96322d;}
+.alert-lvl.lvl-important{background:#fdf3dc;color:#8a6420;}
+.alert-lvl.lvl-info{background:#eef4fb;color:#2b5a91;}
 .ep{background:var(--card);border:1px solid rgba(230,235,232,.7);border-radius:17px;padding:13px;margin-bottom:10px;box-shadow:var(--shadow-sm);}
 
 /* ===== الذكاء الاصطناعي ===== */
@@ -433,8 +439,7 @@ textarea.rv-input{resize:vertical;min-height:58px;}
     <!-- التنبيهات -->
     <div id="alerts" class="screen">
       <div class="backline"><button class="back" onclick="goScreen('home')">→</button><h2>تنبيهات البريمي</h2></div>
-      <div class="alert-box warn"><strong>🌧️ تنبيه أمطار</strong><div class="muted">في وقت الأمطار، تجنب عبور الأودية وتابع الجهات الرسمية.</div></div>
-      <div class="alert-box info"><strong>📱 تحديث التطبيق</strong><div class="muted">قائمة الخدمات تجريبية وسيتم توثيق المزودين قبل الإطلاق الرسمي.</div></div>
+      <div id="alertsList"><div class="no-rv">جارِ التحميل...</div></div>
     </div>
 
     <!-- المزيد -->
@@ -592,6 +597,28 @@ textarea.rv-input{resize:vertical;min-height:58px;}
 
         <div class="section-label">⭐ آخر التقييمات</div>
         <div id="adminReviews"></div>
+
+        <div class="section-label">🔔 إدارة التنبيهات</div>
+        <div class="d-card" style="margin-bottom:12px">
+          <div class="field-group">
+            <label>عنوان التنبيه *</label>
+            <input id="al_title" type="text" placeholder="مثال: تنبيه أمطار"/>
+          </div>
+          <div class="field-group">
+            <label>التفاصيل *</label>
+            <textarea id="al_desc" placeholder="نص التنبيه..."></textarea>
+          </div>
+          <div class="field-group">
+            <label>المستوى</label>
+            <select id="al_level">
+              <option value="معلومة">معلومة</option>
+              <option value="مهم">مهم</option>
+              <option value="طوارئ">طوارئ</option>
+            </select>
+          </div>
+          <button class="submit-btn" onclick="submitAlert(this)">➕ نشر التنبيه</button>
+        </div>
+        <div id="adminAlerts"></div>
       </div>
     </div>
 
@@ -807,7 +834,9 @@ function goDetail(id) {
   if (!p) return;
   const mapUrl = safeUrl(p.map);
   const waBtn = p.wa ? `<a class="action wa" href="https://wa.me/968${esc(p.wa)}">واتساب</a>` : `<span class="action" style="opacity:.35">لا يوجد</span>`;
-  const callBtn = p.phone ? `<a class="action call" href="tel:${esc(p.phone)}">${esc(p.phone)}</a>` : `<span class="action" style="opacity:.35">لا يوجد</span>`;
+  const callBtn = p.phone
+    ? `<a class="action call" href="tel:${esc(p.phone)}">${esc(p.phone)}</a>`
+    : `<span class="action" id="callBtnSlot" style="opacity:.35">لا يوجد</span>`;
   const mapBtn = mapUrl ? `<a class="action map-btn" href="${esc(mapUrl)}" target="_blank" rel="noopener">الموقع</a>` : `<span class="action" style="opacity:.35">لا يوجد</span>`;
   rvSelected = 5;
   document.getElementById('detailContent').innerHTML = `
@@ -929,6 +958,12 @@ async function loadGooglePlace(p) {
     if (!res.ok) throw new Error(data.error || '');
     if (summary) summary.innerHTML = renderGoogleSummary(data);
     if (reviews) reviews.innerHTML = renderGoogleReviews(data);
+    // إن لم يكن للمكان رقم هاتف خاص، نستخدم رقم Google الحقيقي كزر اتصال رئيسي
+    const callSlot = document.getElementById('callBtnSlot');
+    if (callSlot && data.phone) {
+      const digits = String(data.phone).replace(/[^\d+]/g, '');
+      callSlot.outerHTML = `<a class="action call" href="tel:${esc(digits)}" dir="ltr">${esc(data.phone)}</a>`;
+    }
   } catch (err) {
     if (summary) summary.innerHTML = '<small>تقييم Google غير متوفر الآن</small>';
     if (reviews) reviews.innerHTML = '<div class="no-rv">مراجعات Google غير متوفرة الآن</div>';
@@ -1306,6 +1341,7 @@ async function adminLogin() {
     document.getElementById('loginErr').style.display = 'none';
     renderAdminPanel();
     loadAdminReviews();
+    loadAdminAlerts();
   } catch (err) {
     document.getElementById('loginErr').style.display = 'block';
     document.getElementById('adminPass').value = '';
@@ -1447,6 +1483,100 @@ async function deleteReview(id) {
     adminReviewsList = adminReviewsList.filter(r => r.id !== id);
     renderAdminReviews();
     loadRatings();
+  } catch (err) {
+    alert('حدث خطأ، حاول مرة أخرى.');
+  }
+}
+
+// ===== التنبيهات =====
+const ALERT_LVL_CLASS = {'طوارئ':'lvl-emergency','مهم':'lvl-important','معلومة':'lvl-info'};
+const ALERT_BOX_CLASS = {'طوارئ':'danger','مهم':'warn','معلومة':'info'};
+const ALERT_ICON = {'طوارئ':'🚨','مهم':'⚠️','معلومة':'📱'};
+
+async function loadAlerts() {
+  const el = document.getElementById('alertsList');
+  try {
+    const res = await fetch('/api/alerts');
+    const data = await res.json();
+    const alerts = data.alerts || [];
+    el.innerHTML = alerts.length
+      ? alerts.map(a => `
+        <div class="alert-box ${ALERT_BOX_CLASS[a.level] || 'info'}">
+          <span class="alert-lvl ${ALERT_LVL_CLASS[a.level] || 'lvl-info'}">${esc(a.level || 'معلومة')}</span>
+          <strong>${ALERT_ICON[a.level] || '📱'} ${esc(a.title)}</strong>
+          <div class="muted">${esc(a.desc)}</div>
+          <span class="a-date">${esc(a.date || '')}</span>
+        </div>`).join('')
+      : '<div class="no-rv">لا توجد تنبيهات حالياً</div>';
+  } catch (err) {
+    el.innerHTML = '<div class="no-rv">تعذر تحميل التنبيهات</div>';
+  }
+}
+
+let adminAlertsList = [];
+
+async function loadAdminAlerts() {
+  try {
+    const res = await fetch('/api/alerts?all=1', { headers: {'x-admin-password': adminPassword} });
+    const data = await res.json();
+    adminAlertsList = data.alerts || [];
+  } catch (err) {
+    adminAlertsList = [];
+  }
+  renderAdminAlerts();
+}
+
+function renderAdminAlerts() {
+  const el = document.getElementById('adminAlerts');
+  el.innerHTML = adminAlertsList.length
+    ? adminAlertsList.map(a => `
+      <div class="req-card">
+        <div class="rq-name"><span class="alert-lvl ${ALERT_LVL_CLASS[a.level] || 'lvl-info'}">${esc(a.level || 'معلومة')}</span> ${esc(a.title)}</div>
+        <div class="rq-meta">${esc(a.date || '')}</div>
+        <div class="rq-detail">${esc(a.desc)}</div>
+        <div class="req-actions" style="grid-template-columns:1fr">
+          <button class="reject-btn" onclick="deleteAlert('${esc(a.id)}')">🗑️ حذف التنبيه</button>
+        </div>
+      </div>`).join('')
+    : '<div class="empty-req">لا توجد تنبيهات بعد</div>';
+}
+
+async function submitAlert(btn) {
+  const title = document.getElementById('al_title').value.trim();
+  const desc = document.getElementById('al_desc').value.trim();
+  const level = document.getElementById('al_level').value;
+  if (!title || !desc) {
+    alert('الرجاء تعبئة العنوان والتفاصيل');
+    return;
+  }
+  btn.disabled = true;
+  try {
+    const res = await fetch('/api/alerts', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'x-admin-password': adminPassword},
+      body: JSON.stringify({ title, desc, level })
+    });
+    if (!res.ok) throw new Error();
+    document.getElementById('al_title').value = '';
+    document.getElementById('al_desc').value = '';
+    loadAdminAlerts();
+  } catch (err) {
+    alert('حدث خطأ، حاول مرة أخرى.');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function deleteAlert(id) {
+  if (!confirm('حذف هذا التنبيه نهائياً؟')) return;
+  try {
+    const res = await fetch('/api/alerts?id=' + encodeURIComponent(id), {
+      method: 'DELETE',
+      headers: {'x-admin-password': adminPassword}
+    });
+    if (!res.ok) throw new Error();
+    adminAlertsList = adminAlertsList.filter(a => a.id !== id);
+    renderAdminAlerts();
   } catch (err) {
     alert('حدث خطأ، حاول مرة أخرى.');
   }
@@ -1630,6 +1760,7 @@ if (!SpeechRec) document.getElementById('askMicBtn').style.display = 'none';
 renderFeatured();
 loadApprovedPlaces();
 loadRatings();
+loadAlerts();
 
 // لوحة التحكم مخفية عن الواجهة — تفتح فقط عبر الرابط .../#admin
 if (location.hash === '#admin') goScreen('admin');
