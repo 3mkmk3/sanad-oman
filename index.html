@@ -153,6 +153,20 @@ body.welcome-open{overflow:hidden;}
 .alert-lvl.lvl-important{background:#fdf3dc;color:#8a6420;}
 .alert-lvl.lvl-info{background:#eef4fb;color:#2b5a91;}
 .dist-badge{background:var(--ai-lt);color:var(--ai);}
+
+/* ===== إنجازات المحافظة ===== */
+.achv-stats{display:flex;gap:10px;overflow-x:auto;margin-bottom:16px;scrollbar-width:none;}
+.achv-stats::-webkit-scrollbar{display:none;}
+.achv-stat{flex-shrink:0;min-width:92px;background:linear-gradient(150deg,var(--green-deep),var(--green));color:#fff;border-radius:18px;padding:14px 16px;box-shadow:0 10px 24px rgba(15,110,92,.22);}
+.achv-stat .n{font-size:22px;font-weight:800;display:block;}
+.achv-stat .l{font-size:11px;opacity:.85;margin-top:2px;}
+.achv-card{background:var(--card);border:1px solid rgba(230,235,232,.7);border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:var(--shadow-sm);}
+.achv-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px;}
+.achv-title{font-size:14.5px;font-weight:800;line-height:1.4;}
+.achv-stat-pill{flex-shrink:0;background:var(--gold-lt);color:#8a6420;font-size:12px;font-weight:800;padding:4px 10px;border-radius:99px;white-space:nowrap;}
+.achv-cat{display:inline-block;font-size:10.5px;font-weight:800;padding:2px 9px;border-radius:99px;margin-bottom:7px;background:var(--green-lt);color:var(--green-deep);}
+.achv-img{width:100%;max-height:150px;object-fit:cover;border-radius:13px;margin-bottom:9px;}
+.achv-date{display:block;font-size:11px;color:var(--muted);margin-top:8px;}
 .ep{background:var(--card);border:1px solid rgba(230,235,232,.7);border-radius:17px;padding:13px;margin-bottom:10px;box-shadow:var(--shadow-sm);}
 
 /* ===== الذكاء الاصطناعي ===== */
@@ -396,16 +410,14 @@ textarea.rv-input{resize:vertical;min-height:58px;}
 
     <!-- كل الخدمات -->
     <div id="services" class="screen">
-      <div class="backline"><button class="back" onclick="goScreen('home')">→</button><h2>كل الخدمات</h2></div>
+      <div class="backline"><button class="back" onclick="goScreen('home')">→</button><h2>أهم الخدمات</h2></div>
       <div class="grid">
         <button class="cat hue-health" onclick="goCat('الصحة')"><span class="icon">🏥</span><strong>الصحة</strong><small>صيدليات وعيادات</small></button>
         <button class="cat hue-car" onclick="goCat('السيارات')"><span class="icon">🚗</span><strong>السيارات</strong><small>ونش وكراج وبنشر</small></button>
-        <button class="cat hue-home" onclick="goCat('خدمات المنزل')"><span class="icon">🏠</span><strong>خدمات المنزل</strong><small>تكييف وسباكة وكهرباء</small></button>
         <button class="cat hue-food" onclick="goCat('المطاعم والمقاهي')"><span class="icon">🍽️</span><strong>المطاعم</strong><small>أماكن قريبة ومجربة</small></button>
-        <button class="cat hue-gov" onclick="goCat('جهات مهمة')"><span class="icon">🏛️</span><strong>جهات مهمة</strong><small>بنوك ودوائر وخدمات</small></button>
-        <button class="cat hue-tour" onclick="goCat('السياحة والترفيه')"><span class="icon">🏰</span><strong>السياحة والترفيه</strong><small>معالم وفنادق ومنتزهات</small></button>
         <button class="cat hue-gov" onclick="goCat('التسوق')"><span class="icon">🛍️</span><strong>التسوق</strong><small>أسواق ومولات ومحلات</small></button>
-        <button class="cat hue-health" onclick="goCat('مساجد')"><span class="icon">🕌</span><strong>المساجد</strong><small>جوامع ومساجد البريمي</small></button>
+        <button class="cat hue-home" onclick="goCat('خدمات المنزل')"><span class="icon">🏠</span><strong>خدمات المنزل</strong><small>تكييف وسباكة وكهرباء</small></button>
+        <button class="cat hue-gov" onclick="goCat('جهات مهمة')"><span class="icon">🏛️</span><strong>جهات مهمة</strong><small>بنوك ودوائر وخدمات</small></button>
       </div>
     </div>
 
@@ -489,10 +501,30 @@ textarea.rv-input{resize:vertical;min-height:58px;}
       <div id="alertsList"><div class="no-rv">جارِ التحميل...</div></div>
     </div>
 
+    <!-- إنجازات المحافظة -->
+    <div id="achievements" class="screen">
+      <div class="backline"><button class="back" onclick="goScreen('more')">→</button><h2>🏗️ إنجازات المحافظة</h2></div>
+      <div id="achvStats" class="achv-stats"></div>
+      <div class="toolbar">
+        <button class="chip active" onclick="setAchvFilter('all',this)">الكل</button>
+        <button class="chip" onclick="setAchvFilter('طرق',this)">طرق</button>
+        <button class="chip" onclick="setAchvFilter('بنية تحتية',this)">بنية تحتية</button>
+        <button class="chip" onclick="setAchvFilter('مرافق عامة',this)">مرافق عامة</button>
+        <button class="chip" onclick="setAchvFilter('تعليم وصحة',this)">تعليم وصحة</button>
+        <button class="chip" onclick="setAchvFilter('بيئة',this)">بيئة</button>
+      </div>
+      <div id="achvList"><div class="no-rv">جارِ التحميل...</div></div>
+    </div>
+
     <!-- المزيد -->
     <div id="more" class="screen">
       <div class="backline"><button class="back" onclick="goScreen('home')">→</button><h2>المزيد</h2></div>
       <div class="more-list">
+        <div class="more-item" onclick="goScreen('achievements')" style="cursor:pointer">
+          <span>🏗️</span>
+          <div><strong>إنجازات المحافظة</strong><small>طرق ومشاريع وتطويرات في البريمي</small></div>
+          <span style="color:var(--green);font-size:18px">›</span>
+        </div>
         <div class="more-item" onclick="goScreen('register')" style="cursor:pointer">
           <span>🏪</span>
           <div><strong>سجّل نشاطك التجاري</strong><small>أضف محلك أو خدمتك في التطبيق — مجاناً الآن</small></div>
@@ -666,6 +698,41 @@ textarea.rv-input{resize:vertical;min-height:58px;}
           <button class="submit-btn" onclick="submitAlert(this)">➕ نشر التنبيه</button>
         </div>
         <div id="adminAlerts"></div>
+
+        <div class="section-label">🏗️ إدارة إنجازات المحافظة</div>
+        <div class="d-card" style="margin-bottom:12px">
+          <div class="field-group">
+            <label>عنوان الإنجاز *</label>
+            <input id="ac_title" type="text" placeholder="مثال: تعبيد طريق الصريمي"/>
+          </div>
+          <div class="field-group">
+            <label>التفاصيل *</label>
+            <textarea id="ac_desc" placeholder="وصف مختصر للمشروع..."></textarea>
+          </div>
+          <div class="field-row">
+            <div class="field-group">
+              <label>التصنيف</label>
+              <select id="ac_cat">
+                <option value="طرق">طرق</option>
+                <option value="بنية تحتية">بنية تحتية</option>
+                <option value="مرافق عامة">مرافق عامة</option>
+                <option value="تعليم وصحة">تعليم وصحة</option>
+                <option value="بيئة">بيئة</option>
+                <option value="مشاريع أخرى">مشاريع أخرى</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label>رقم مميز (اختياري)</label>
+              <input id="ac_stat" type="text" placeholder="مثال: 12 كم"/>
+            </div>
+          </div>
+          <div class="field-group">
+            <label>رابط صورة (اختياري)</label>
+            <input id="ac_photo" type="url" placeholder="https://..."/>
+          </div>
+          <button class="submit-btn" onclick="submitAchievement(this)">➕ نشر الإنجاز</button>
+        </div>
+        <div id="adminAchievements"></div>
       </div>
     </div>
 
@@ -909,7 +976,7 @@ function goScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  const map = {home:0, services:1, category:1, ai:2, alerts:3, more:4};
+  const map = {home:0, services:1, category:1, ai:2, alerts:3, more:4, achievements:4};
   if (map[id] !== undefined) document.querySelectorAll('.nav-btn')[map[id]].classList.add('active');
   closeSR();
   const content = document.querySelector('.content');
@@ -1469,6 +1536,7 @@ async function adminLogin() {
     renderAdminPanel();
     loadAdminReviews();
     loadAdminAlerts();
+    loadAdminAchievements();
   } catch (err) {
     document.getElementById('loginErr').style.display = 'block';
     document.getElementById('adminPass').value = '';
@@ -1704,6 +1772,133 @@ async function deleteAlert(id) {
     if (!res.ok) throw new Error();
     adminAlertsList = adminAlertsList.filter(a => a.id !== id);
     renderAdminAlerts();
+  } catch (err) {
+    alert('حدث خطأ، حاول مرة أخرى.');
+  }
+}
+
+// ===== إنجازات المحافظة =====
+const ACHV_ICON = {'طرق':'🛣️','بنية تحتية':'🏗️','مرافق عامة':'🏛️','تعليم وصحة':'🎓','بيئة':'🌳','مشاريع أخرى':'📌'};
+let achievementsList = [];
+let achvFilter = 'all';
+
+function renderAchvStats() {
+  const el = document.getElementById('achvStats');
+  const total = achievementsList.length;
+  const byCat = {};
+  achievementsList.forEach(a => { byCat[a.category] = (byCat[a.category] || 0) + 1; });
+  const cards = [`<div class="achv-stat"><span class="n">${esc(total)}</span><span class="l">إجمالي الإنجازات</span></div>`];
+  Object.entries(byCat).forEach(([cat, count]) => {
+    cards.push(`<div class="achv-stat"><span class="n">${esc(count)}</span><span class="l">${ACHV_ICON[cat] || '📌'} ${esc(cat)}</span></div>`);
+  });
+  el.innerHTML = cards.join('');
+}
+
+function renderAchvList() {
+  const el = document.getElementById('achvList');
+  const list = achvFilter === 'all' ? achievementsList : achievementsList.filter(a => a.category === achvFilter);
+  el.innerHTML = list.length
+    ? list.map(a => `
+      <div class="achv-card">
+        ${safeImage(a.photo) ? `<img class="achv-img" src="${esc(a.photo)}" alt="" onerror="this.remove()"/>` : ''}
+        <span class="achv-cat">${ACHV_ICON[a.category] || '📌'} ${esc(a.category)}</span>
+        <div class="achv-top">
+          <div class="achv-title">${esc(a.title)}</div>
+          ${a.stat ? `<span class="achv-stat-pill">${esc(a.stat)}</span>` : ''}
+        </div>
+        <div class="muted">${esc(a.desc)}</div>
+        <span class="achv-date">${esc(a.date || '')}</span>
+      </div>`).join('')
+    : '<div class="no-rv">لا توجد إنجازات في هذا التصنيف بعد</div>';
+}
+
+async function loadAchievements() {
+  try {
+    const res = await fetch('/api/achievements');
+    const data = await res.json();
+    achievementsList = data.achievements || [];
+  } catch (err) {
+    achievementsList = [];
+  }
+  renderAchvStats();
+  renderAchvList();
+}
+
+function setAchvFilter(cat, btn) {
+  achvFilter = cat;
+  document.querySelectorAll('#achievements .chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  renderAchvList();
+}
+
+let adminAchievementsList = [];
+
+async function loadAdminAchievements() {
+  try {
+    const res = await fetch('/api/achievements?all=1', { headers: {'x-admin-password': adminPassword} });
+    const data = await res.json();
+    adminAchievementsList = data.achievements || [];
+  } catch (err) {
+    adminAchievementsList = [];
+  }
+  renderAdminAchievements();
+}
+
+function renderAdminAchievements() {
+  const el = document.getElementById('adminAchievements');
+  el.innerHTML = adminAchievementsList.length
+    ? adminAchievementsList.map(a => `
+      <div class="req-card">
+        <div class="rq-name">${ACHV_ICON[a.category] || '📌'} ${esc(a.title)}${a.stat ? ` — <span style="color:#8a6420">${esc(a.stat)}</span>` : ''}</div>
+        <div class="rq-meta">${esc(a.category)} · ${esc(a.date || '')}</div>
+        <div class="rq-detail">${esc(a.desc)}</div>
+        <div class="req-actions" style="grid-template-columns:1fr">
+          <button class="reject-btn" onclick="deleteAchievement('${esc(a.id)}')">🗑️ حذف الإنجاز</button>
+        </div>
+      </div>`).join('')
+    : '<div class="empty-req">لا توجد إنجازات بعد</div>';
+}
+
+async function submitAchievement(btn) {
+  const title = document.getElementById('ac_title').value.trim();
+  const desc = document.getElementById('ac_desc').value.trim();
+  const category = document.getElementById('ac_cat').value;
+  const stat = document.getElementById('ac_stat').value.trim();
+  const photo = document.getElementById('ac_photo').value.trim();
+  if (!title || !desc) {
+    alert('الرجاء تعبئة العنوان والتفاصيل');
+    return;
+  }
+  btn.disabled = true;
+  try {
+    const res = await fetch('/api/achievements', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'x-admin-password': adminPassword},
+      body: JSON.stringify({ title, desc, category, stat, photo })
+    });
+    if (!res.ok) throw new Error();
+    document.getElementById('ac_title').value = '';
+    document.getElementById('ac_desc').value = '';
+    document.getElementById('ac_stat').value = '';
+    document.getElementById('ac_photo').value = '';
+    loadAdminAchievements();
+  } catch (err) {
+    alert('حدث خطأ، حاول مرة أخرى.');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function deleteAchievement(id) {
+  if (!confirm('حذف هذا الإنجاز نهائياً؟')) return;
+  try {
+    const res = await fetch('/api/achievements?id=' + encodeURIComponent(id), {
+      method: 'DELETE',
+      headers: {'x-admin-password': adminPassword}
+    });
+    if (!res.ok) throw new Error();
+    adminAchievementsList = adminAchievementsList.filter(a => a.id !== id);
+    renderAdminAchievements();
   } catch (err) {
     alert('حدث خطأ، حاول مرة أخرى.');
   }
@@ -1957,6 +2152,7 @@ renderFeatured();
 loadApprovedPlaces();
 loadRatings();
 loadAlerts();
+loadAchievements();
 showWelcomeNotice();
 
 // لوحة التحكم مخفية عن الواجهة — تفتح فقط عبر الرابط .../#admin
