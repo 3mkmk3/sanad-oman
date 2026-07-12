@@ -755,9 +755,9 @@ const places = [
 ];
 
 const emergencies = [
-  {name:'الشرطة',phone:'9999',desc:'للحالات الأمنية والطارئة'},
-  {name:'الإسعاف',phone:'9999',desc:'للحالات الصحية العاجلة'},
-  {name:'الدفاع المدني',phone:'9999',desc:'حرائق وإنقاذ وحوادث'},
+  {name:'الشرطة',phone:'9999',desc:'للحالات الأمنية والطارئة',logo:'https://upload.wikimedia.org/wikipedia/en/d/d1/ROP_-_Logo.jpg'},
+  {name:'الإسعاف',phone:'9999',desc:'للحالات الصحية العاجلة',logo:'https://upload.wikimedia.org/wikipedia/commons/a/a9/Civil_Defence_and_Ambulance_Authority_of_Oman_Logo.png'},
+  {name:'الدفاع المدني',phone:'9999',desc:'حرائق وإنقاذ وحوادث',logo:'https://upload.wikimedia.org/wikipedia/commons/a/a9/Civil_Defence_and_Ambulance_Authority_of_Oman_Logo.png'},
 ];
 
 // ===== أدوات مساعدة =====
@@ -1158,7 +1158,7 @@ function renderFeatured() {
 function renderEmergency() {
   document.getElementById('emergencyList').innerHTML = emergencies.map(e => `
     <div class="ep">
-      <div class="row"><div class="av">${e.name[0]}</div><div><strong>${e.name}</strong><div class="muted">${e.desc}</div></div></div>
+      <div class="row"><div class="av logo-tile"><span class="logo-fallback">${esc(e.name[0])}</span>${safeImage(e.logo) ? `<img class="av-img brand-logo-img" src="${esc(e.logo)}" alt="" onerror="this.remove()"/>` : ''}</div><div><strong>${e.name}</strong><div class="muted">${e.desc}</div></div></div>
       <div class="actions" style="margin-top:10px"><a class="action call" href="tel:${e.phone}">اتصال</a><span class="action">${e.phone}</span><span class="action">رسمي</span></div>
     </div>`).join('');
 }
