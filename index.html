@@ -233,8 +233,9 @@ textarea.rv-input{resize:vertical;min-height:58px;}
 .ask-typing span:nth-child(3){animation-delay:.4s;}
 @keyframes askBlink{0%,60%,100%{opacity:.25}30%{opacity:1}}
 .ask-input-row{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line);flex-shrink:0;background:#fff;}
-.ask-input-row input{flex:1;padding:12px 14px;border-radius:20px;border:1.5px solid var(--line);font:inherit;font-size:13.5px;outline:none;}
+.ask-input-row input{flex:1;padding:12px 14px;border-radius:20px;border:1.5px solid var(--line);font:inherit;font-size:13.5px;outline:none;transition:border-color .2s,box-shadow .2s;}
 .ask-input-row input:focus{border-color:var(--green);}
+.ask-input-row input.listening{border-color:#e05252;box-shadow:0 0 0 3px rgba(224,82,82,.12);}
 .ask-input-row button{width:44px;height:44px;border-radius:50%;background:var(--green);color:#fff;border:none;font-size:17px;flex-shrink:0;}
 .ask-input-row button:disabled{opacity:.5;}
 .ask-mic{background:#f1f4f2 !important;color:var(--ink) !important;border:1.5px solid var(--line) !important;}
@@ -1822,18 +1823,39 @@ function toggleAskMic() {
     if (!ok) return;
   }
 
+  const input = document.getElementById('askInput');
+  const origPlaceholder = input.placeholder;
+
   try {
     askRec = new SpeechRec();
     askRec.lang = 'ar-OM';
-    askRec.interimResults = false;
-    askRec.onresult = e => {
-      const t = e.results[0][0].transcript;
-      if (t) { document.getElementById('askInput').value = t; sendAsk(); }
+    askRec.interimResults = true; // يعرض الكلام في خانة الكتابة أولاً بأول أثناء التحدث
+    askRec.onstart = () => {
+      input.value = '';
+      input.placeholder = '🎙️ يستمع... تحدث الآن';
+      input.classList.add('listening');
     };
-    askRec.onend = () => { askRec = null; btn.classList.remove('rec'); };
+    askRec.onresult = e => {
+      let transcript = '';
+      let isFinal = false;
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        transcript += e.results[i][0].transcript;
+        if (e.results[i].isFinal) isFinal = true;
+      }
+      input.value = transcript;
+      if (isFinal && transcript.trim()) sendAsk();
+    };
+    askRec.onend = () => {
+      askRec = null;
+      btn.classList.remove('rec');
+      input.classList.remove('listening');
+      input.placeholder = origPlaceholder;
+    };
     askRec.onerror = e => {
       askRec = null;
       btn.classList.remove('rec');
+      input.classList.remove('listening');
+      input.placeholder = origPlaceholder;
       const reason = e && e.error;
       if (reason === 'not-allowed' || reason === 'permission-denied' || reason === 'service-not-allowed') {
         addAskBubble('ai', '🎤 تم رفض إذن الميكروفون. لتفعيله: افتح إعدادات الموقع من متصفحك واسمح باستخدام الميكروفون، ثم حاول مرة أخرى.');
@@ -1850,6 +1872,8 @@ function toggleAskMic() {
   } catch (err) {
     askRec = null;
     btn.classList.remove('rec');
+    input.classList.remove('listening');
+    input.placeholder = origPlaceholder;
   }
 }
 
