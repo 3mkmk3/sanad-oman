@@ -1,3 +1,7 @@
+// دالة خادمة موحّدة لتكامل Google Places — تدمج جلب الصور وجلب التقييم/المراجعات
+// (كانتا ملفين منفصلين؛ دُمجتا لتقليل عدد الدوال الخادمة تحت حد خطة Vercel المجانية)
+// ?type=photo → صورة حقيقية للمكان (تحويلة 302 لرابط الصورة)
+// ?type=place (افتراضي) → تقييم Google وعدد المراجعات ونصوصها وهاتف وساعات العمل
 import { get, setex, rateLimit } from './_kv.js';
 
 const PLACE_ID_TTL_SECONDS = 60 * 60 * 24 * 30;
@@ -40,6 +44,157 @@ async function rememberPlaceName(cacheKey, placeName) {
     await setex(cacheKey, PLACE_ID_TTL_SECONDS, placeName);
   } catch (err) {}
 }
+
+// ===== صورة المكان =====
+
+async function legacyPhotoUri(key, placeId) {
+  try {
+    const detailsUrl = new URL('https://maps.googleapis.com/maps/api/place/details/json');
+    detailsUrl.searchParams.set('place_id', placeId);
+    detailsUrl.searchParams.set('fields', 'photo');
+    detailsUrl.searchParams.set('language', 'ar');
+    detailsUrl.searchParams.set('key', key);
+
+    const details = await fetch(detailsUrl);
+    if (!details.ok) return '';
+    const data = await details.json();
+    const ref = data.status === 'OK' && data.result && data.result.photos && data.result.photos[0]
+      ? data.result.photos[0].photo_reference
+      : '';
+    if (!ref) return '';
+
+    const photoUrl = new URL('https://maps.googleapis.com/maps/api/place/photo');
+    photoUrl.searchParams.set('maxwidth', '800');
+    photoUrl.searchParams.set('photo_reference', ref);
+    photoUrl.searchParams.set('key', key);
+    const photo = await fetch(photoUrl, { redirect: 'manual' });
+    return photo.headers.get('location') || '';
+  } catch (err) {
+    return '';
+  }
+}
+
+async function handlePhoto(req, res, key, searchText) {
+  const cacheKey = 'sanad:photo:v3:' + encodeURIComponent(searchText.toLowerCase());
+  if (!req.query.debug) {
+    try {
+      const cached = await get(cacheKey);
+      if (cached === 'none') {
+        return res.status(404).json({ error: 'No photo' });
+      }
+      if (cached) {
+        res.setHeader('Cache-Control', 'public, max-age=43200, s-maxage=43200');
+        res.setHeader('Location', cached);
+        return res.status(302).end();
+      }
+    } catch (err) {}
+  }
+
+  // نعيد استخدام معرّف المكان المخزن من طلبات النوع "place" لتوفير حصة البحث اليومية
+  const gpidKey = 'sanad:gpid:' + encodeURIComponent(searchText.toLowerCase());
+  let cachedName = '';
+  try {
+    const g = await get(gpidKey);
+    if (typeof g === 'string' && g.startsWith('places/')) cachedName = g;
+  } catch (err) {}
+
+  try {
+    let foundPlace = cachedName ? { name: cachedName, id: cachedName.slice(7), photos: null } : null;
+
+    if (!foundPlace) {
+      const sr = await fetch('https://places.googleapis.com/v1/places:searchText', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': key,
+          'X-Goog-FieldMask': 'places.id,places.name,places.photos'
+        },
+        body: JSON.stringify({
+          textQuery: `${searchText} البريمي عمان`,
+          pageSize: 1,
+          languageCode: 'ar',
+          regionCode: 'OM'
+        })
+      });
+      const sdata = await sr.json();
+      if (!sr.ok) {
+        if (req.query.debug) {
+          return res.status(200).json({ step: 'search', status: sr.status, error: sdata.error || null });
+        }
+        return res.status(502).json({ error: 'Search failed' });
+      }
+      foundPlace = sdata.places && sdata.places[0] ? sdata.places[0] : null;
+      if (foundPlace && typeof foundPlace.name === 'string' && foundPlace.name.startsWith('places/')) {
+        try { await setex(gpidKey, PLACE_ID_TTL_SECONDS, foundPlace.name); } catch (err) {}
+      }
+    }
+
+    let photoName =
+      foundPlace && foundPlace.photos && foundPlace.photos[0]
+        ? foundPlace.photos[0].name
+        : '';
+
+    if (!photoName && foundPlace && foundPlace.name) {
+      const detailsUrl = new URL(`https://places.googleapis.com/v1/${foundPlace.name}`);
+      detailsUrl.searchParams.set('languageCode', 'ar');
+      detailsUrl.searchParams.set('regionCode', 'OM');
+      const dr = await fetch(detailsUrl, {
+        headers: { 'X-Goog-Api-Key': key, 'X-Goog-FieldMask': 'photos' }
+      });
+      if (dr.ok) {
+        const ddata = await dr.json();
+        photoName = ddata.photos && ddata.photos[0] ? ddata.photos[0].name : '';
+      }
+    }
+
+    if (!photoName && foundPlace && foundPlace.id) {
+      const legacyUri = await legacyPhotoUri(key, foundPlace.id);
+      if (legacyUri) {
+        try { await setex(cacheKey, 43200, legacyUri); } catch (err) {}
+        res.setHeader('Cache-Control', 'public, max-age=43200, s-maxage=43200');
+        res.setHeader('Location', legacyUri);
+        return res.status(302).end();
+      }
+    }
+
+    if (!photoName) {
+      if (req.query.debug) {
+        return res.status(200).json({
+          step: 'no-photo',
+          placeFound: !!foundPlace,
+          placeName: foundPlace ? foundPlace.name : '',
+          photosInSearch: foundPlace && foundPlace.photos ? foundPlace.photos.length : 0
+        });
+      }
+      try { await setex(cacheKey, 86400, 'none'); } catch (err) {}
+      return res.status(404).json({ error: 'No photo' });
+    }
+
+    const mr = await fetch(
+      `https://places.googleapis.com/v1/${photoName}/media?maxWidthPx=800&skipHttpRedirect=true&key=${key}`
+    );
+    const mdata = await mr.json();
+    const uri = mdata.photoUri || '';
+    if (!uri) {
+      if (req.query.debug) {
+        return res.status(200).json({ step: 'media', status: mr.status, error: mdata.error || null });
+      }
+      if (mr.ok) {
+        try { await setex(cacheKey, 86400, 'none'); } catch (err) {}
+      }
+      return res.status(404).json({ error: 'No photo' });
+    }
+
+    try { await setex(cacheKey, 43200, uri); } catch (err) {}
+    res.setHeader('Cache-Control', 'public, max-age=43200, s-maxage=43200');
+    res.setHeader('Location', uri);
+    return res.status(302).end();
+  } catch (err) {
+    return res.status(502).json({ error: 'Photo service error' });
+  }
+}
+
+// ===== تقييم ومراجعات المكان =====
 
 function normalizeReview(review) {
   const author = review.authorAttribution || {};
@@ -91,23 +246,7 @@ async function legacyDetails(key, placeId) {
   }
 }
 
-export default async function handler(req, res) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  const key = process.env.GOOGLE_MAPS_API_KEY;
-  if (!key) {
-    return res.status(404).json({ error: 'Google Places is not configured' });
-  }
-
-  const rawQuery = clean(req.query.q, 140);
-  const mapQuery = queryFromMapUrl(clean(req.query.map, 500));
-  const searchText = clean(mapQuery || rawQuery, 220);
-  if (!searchText) {
-    return res.status(400).json({ error: 'Missing q' });
-  }
-
+async function handlePlace(req, res, key, searchText) {
   // نعيد النتيجة المخزنة (12 ساعة) بدل استدعاء Google في كل زيارة — توفير كبير في التكلفة
   const payloadKey = 'sanad:gplace:v3:' + encodeURIComponent(searchText.toLowerCase());
   if (!req.query.debug) {
@@ -236,30 +375,6 @@ export default async function handler(req, res) {
         legacyError,
         finalReviewCount: reviews.length
       };
-      // فحوصات مباشرة: حقل واحد في كل طلب، مع وبدون تحديد اللغة
-      const probe = async (mask, lang) => {
-        try {
-          const u = new URL(`https://places.googleapis.com/v1/${placeName}`);
-          if (lang) u.searchParams.set('languageCode', lang);
-          const r2 = await fetch(u, { headers: { 'X-Goog-Api-Key': key, 'X-Goog-FieldMask': mask } });
-          const j2 = await r2.json().catch(() => ({}));
-          return {
-            mask, lang: lang || 'none', status: r2.status,
-            count: Array.isArray(j2[mask]) ? j2[mask].length : (j2[mask] !== undefined ? 1 : 0),
-            error: j2.error ? String(j2.error.message || '').slice(0, 180) : ''
-          };
-        } catch (err) {
-          return { mask, lang: lang || 'none', status: 'FETCH_ERROR' };
-        }
-      };
-      payload.debug.probes = [
-        await probe('reviews', ''),
-        await probe('photos', ''),
-        await probe('internationalPhoneNumber', ''),
-        await probe('websiteUri', ''),
-        await probe('regularOpeningHours', ''),
-        await probe('rating', '')
-      ];
     }
 
     res.setHeader('Cache-Control', 'public, max-age=1800, s-maxage=3600');
@@ -267,4 +382,28 @@ export default async function handler(req, res) {
   } catch (err) {
     return res.status(502).json({ error: 'Google Places service error' });
   }
+}
+
+export default async function handler(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const type = req.query.type === 'photo' ? 'photo' : 'place';
+  const q = clean(req.query.q, 140);
+  const mapQuery = queryFromMapUrl(clean(req.query.map, 500));
+  const searchText = clean(mapQuery || q, 220);
+  if (!searchText) {
+    return res.status(400).json({ error: 'Missing q' });
+  }
+
+  const key = process.env.GOOGLE_MAPS_API_KEY;
+  if (!key) {
+    return res.status(404).json({ error: type === 'photo' ? 'Photos not configured' : 'Google Places is not configured' });
+  }
+
+  if (type === 'photo') {
+    return handlePhoto(req, res, key, searchText);
+  }
+  return handlePlace(req, res, key, searchText);
 }

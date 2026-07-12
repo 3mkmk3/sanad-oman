@@ -1,10 +1,76 @@
-// دالة خادمة — تعيد التقييمات لكل الزوار، وتتيح للمشرف حذف تقييم مسيء
+// دالة خادمة موحّدة للتقييمات — تدمج استقبال تقييم زائر جديد وعرض/حذف التقييمات
+// (كانتا ملفين منفصلين rate.js + ratings.js؛ دُمجتا لتقليل عدد الدوال الخادمة)
 // GET بدون معاملات: ملخص (متوسط + عدد) لكل الأماكن
 // GET ?place=id: التقييمات الكاملة لمكان واحد
 // GET ?all=1 (مشرف فقط): كل التقييمات للمراجعة
-// POST {id} (مشرف فقط): حذف تقييم
-import { lrangeAll, lpush, del } from './_kv.js';
+// POST {placeId, stars, ...}: إرسال تقييم جديد (عام، محدود المعدل)
+// POST {id}: حذف تقييم (مشرف فقط)
+import { lrangeAll, lpush, del, rateLimit } from './_kv.js';
 import { isAuthorized } from './_auth.js';
+
+function clean(v, max) {
+  return typeof v === 'string' ? v.trim().slice(0, max) : '';
+}
+
+async function submitRating(req, res) {
+  const b = req.body || {};
+  const placeId = clean(String(b.placeId ?? ''), 40);
+  const stars = Number(b.stars);
+  const comment = clean(b.comment, 300);
+  const name = clean(b.name, 50) || 'زائر';
+
+  if (!placeId || !Number.isInteger(stars) || stars < 1 || stars > 5) {
+    return res.status(400).json({ error: 'Invalid request' });
+  }
+
+  const ip = ((req.headers['x-forwarded-for'] || '').split(',')[0] || '').trim() || 'unknown';
+  try {
+    if (!(await rateLimit(`sanad:rl:rate:${ip}`, 10, 3600))) {
+      return res.status(429).json({ error: 'Too many requests' });
+    }
+    // تقييم واحد لكل مكان من نفس الزائر كل 24 ساعة
+    if (!(await rateLimit(`sanad:rl:rate:${ip}:${placeId}`, 1, 86400))) {
+      return res.status(409).json({ error: 'Already rated' });
+    }
+  } catch (err) {}
+
+  const review = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+    placeId, stars, comment, name,
+    date: new Date().toISOString().slice(0, 10)
+  };
+
+  try {
+    await lpush('sanad:reviews', JSON.stringify(review));
+    return res.status(200).json({ ok: true });
+  } catch (err) {
+    return res.status(502).json({ error: 'Storage error' });
+  }
+}
+
+async function deleteRating(req, res) {
+  if (!isAuthorized(req)) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  const { id } = req.body || {};
+  if (!id) {
+    return res.status(400).json({ error: 'Invalid request' });
+  }
+  try {
+    const reviews = await lrangeAll('sanad:reviews');
+    const remaining = reviews.filter(r => r.id !== id);
+    if (remaining.length === reviews.length) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+    await del('sanad:reviews');
+    for (let i = remaining.length - 1; i >= 0; i--) {
+      await lpush('sanad:reviews', JSON.stringify(remaining[i]));
+    }
+    return res.status(200).json({ ok: true });
+  } catch (err) {
+    return res.status(502).json({ error: 'Storage error' });
+  }
+}
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
@@ -42,27 +108,15 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'POST') {
-    if (!isAuthorized(req)) {
-      return res.status(401).json({ error: 'Unauthorized' });
+    const b = req.body || {};
+    // شكل الطلب يحدد النوع: placeId+stars = تقييم جديد، id فقط = حذف
+    if (b && b.placeId !== undefined && b.stars !== undefined) {
+      return submitRating(req, res);
     }
-    const { id } = req.body || {};
-    if (!id) {
-      return res.status(400).json({ error: 'Invalid request' });
+    if (b && b.id !== undefined) {
+      return deleteRating(req, res);
     }
-    try {
-      const reviews = await lrangeAll('sanad:reviews');
-      const remaining = reviews.filter(r => r.id !== id);
-      if (remaining.length === reviews.length) {
-        return res.status(404).json({ error: 'Not found' });
-      }
-      await del('sanad:reviews');
-      for (let i = remaining.length - 1; i >= 0; i--) {
-        await lpush('sanad:reviews', JSON.stringify(remaining[i]));
-      }
-      return res.status(200).json({ ok: true });
-    } catch (err) {
-      return res.status(502).json({ error: 'Storage error' });
-    }
+    return res.status(400).json({ error: 'Invalid request' });
   }
 
   return res.status(405).json({ error: 'Method not allowed' });

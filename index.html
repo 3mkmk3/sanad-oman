@@ -857,9 +857,10 @@ function shareText(text) {
 // وإن لم تتوفر أي صورة يبقى الحرف الأول
 function photoUrl(p) {
   const params = new URLSearchParams();
+  params.set('type', 'photo');
   params.set('q', p.en || p.name);
   if (p.map) params.set('map', p.map);
-  return safeImage(p.photo) || ('/api/photo?' + params.toString());
+  return safeImage(p.photo) || ('/api/google?' + params.toString());
 }
 // أيقونة القسم بدل الحرف الأول — شكل أوضح للأماكن التي بلا صورة
 const CAT_ICONS = {'الصحة':'🏥','السيارات':'🚗','المطاعم والمقاهي':'🍽️','خدمات المنزل':'🏠','جهات مهمة':'🏛️','السياحة والترفيه':'🏰','التسوق':'🛍️','مساجد':'🕌'};
@@ -1144,10 +1145,11 @@ async function loadGooglePlace(p) {
   const reviews = document.getElementById('googleReviewsInline');
   if (!summary && !reviews) return;
   const params = new URLSearchParams();
+  params.set('type', 'place');
   params.set('q', p.en || p.name);
   if (p.map) params.set('map', p.map);
   try {
-    const res = await fetch('/api/google-place?' + params.toString());
+    const res = await fetch('/api/google?' + params.toString());
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || '');
     if (summary) summary.innerHTML = renderGoogleSummary(data);
@@ -1188,7 +1190,7 @@ async function submitReview(placeId, btn) {
   btn.disabled = true;
   btn.textContent = 'جارِ الإرسال...';
   try {
-    const res = await fetch('/api/rate', {
+    const res = await fetch('/api/ratings', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
@@ -1500,10 +1502,10 @@ async function submitRequest() {
   btn.textContent = 'جارِ الإرسال...';
 
   try {
-    const res = await fetch('/api/submit', {
+    const res = await fetch('/api/business', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({name, cat, type, area, phone, wa, hours, map, photo, desc, owner, contact})
+      body: JSON.stringify({action: 'submit', name, cat, type, area, phone, wa, hours, map, photo, desc, owner, contact})
     });
     if (!res.ok) {
       throw new Error(res.status === 429
@@ -1525,7 +1527,7 @@ async function submitRequest() {
 async function adminLogin() {
   const pass = document.getElementById('adminPass').value;
   try {
-    const res = await fetch('/api/requests', { headers: {'x-admin-password': pass} });
+    const res = await fetch('/api/business', { headers: {'x-admin-password': pass} });
     if (!res.ok) throw new Error();
     const data = await res.json();
     adminPassword = pass;
@@ -1596,10 +1598,10 @@ function reqCard(r, showActions) {
 
 async function reviewReq(id, status) {
   try {
-    const res = await fetch('/api/review', {
+    const res = await fetch('/api/business', {
       method: 'POST',
       headers: {'Content-Type': 'application/json', 'x-admin-password': adminPassword},
-      body: JSON.stringify({id, status})
+      body: JSON.stringify({action: 'review', id, status})
     });
     if (!res.ok) throw new Error();
     const req = requests.find(r => r.id === id);
@@ -1615,10 +1617,10 @@ async function reviewReq(id, status) {
 
 async function unpublishReq(id) {
   try {
-    const res = await fetch('/api/unpublish', {
+    const res = await fetch('/api/business', {
       method: 'POST',
       headers: {'Content-Type': 'application/json', 'x-admin-password': adminPassword},
-      body: JSON.stringify({id})
+      body: JSON.stringify({action: 'unpublish', id})
     });
     if (!res.ok) throw new Error();
     const req = requests.find(r => r.id === id);
@@ -1691,7 +1693,7 @@ const ALERT_ICON = {'طوارئ':'🚨','مهم':'⚠️','معلومة':'📱'}
 async function loadAlerts() {
   const el = document.getElementById('alertsList');
   try {
-    const res = await fetch('/api/alerts');
+    const res = await fetch('/api/content?type=alert');
     const data = await res.json();
     const alerts = data.alerts || [];
     el.innerHTML = alerts.length
@@ -1712,7 +1714,7 @@ let adminAlertsList = [];
 
 async function loadAdminAlerts() {
   try {
-    const res = await fetch('/api/alerts?all=1', { headers: {'x-admin-password': adminPassword} });
+    const res = await fetch('/api/content?type=alert&all=1', { headers: {'x-admin-password': adminPassword} });
     const data = await res.json();
     adminAlertsList = data.alerts || [];
   } catch (err) {
@@ -1746,7 +1748,7 @@ async function submitAlert(btn) {
   }
   btn.disabled = true;
   try {
-    const res = await fetch('/api/alerts', {
+    const res = await fetch('/api/content?type=alert', {
       method: 'POST',
       headers: {'Content-Type': 'application/json', 'x-admin-password': adminPassword},
       body: JSON.stringify({ title, desc, level })
@@ -1765,7 +1767,7 @@ async function submitAlert(btn) {
 async function deleteAlert(id) {
   if (!confirm('حذف هذا التنبيه نهائياً؟')) return;
   try {
-    const res = await fetch('/api/alerts?id=' + encodeURIComponent(id), {
+    const res = await fetch('/api/content?type=alert&id=' + encodeURIComponent(id), {
       method: 'DELETE',
       headers: {'x-admin-password': adminPassword}
     });
@@ -1814,7 +1816,7 @@ function renderAchvList() {
 
 async function loadAchievements() {
   try {
-    const res = await fetch('/api/achievements');
+    const res = await fetch('/api/content?type=achievement');
     const data = await res.json();
     achievementsList = data.achievements || [];
   } catch (err) {
@@ -1835,7 +1837,7 @@ let adminAchievementsList = [];
 
 async function loadAdminAchievements() {
   try {
-    const res = await fetch('/api/achievements?all=1', { headers: {'x-admin-password': adminPassword} });
+    const res = await fetch('/api/content?type=achievement&all=1', { headers: {'x-admin-password': adminPassword} });
     const data = await res.json();
     adminAchievementsList = data.achievements || [];
   } catch (err) {
@@ -1871,7 +1873,7 @@ async function submitAchievement(btn) {
   }
   btn.disabled = true;
   try {
-    const res = await fetch('/api/achievements', {
+    const res = await fetch('/api/content?type=achievement', {
       method: 'POST',
       headers: {'Content-Type': 'application/json', 'x-admin-password': adminPassword},
       body: JSON.stringify({ title, desc, category, stat, photo })
@@ -1892,7 +1894,7 @@ async function submitAchievement(btn) {
 async function deleteAchievement(id) {
   if (!confirm('حذف هذا الإنجاز نهائياً؟')) return;
   try {
-    const res = await fetch('/api/achievements?id=' + encodeURIComponent(id), {
+    const res = await fetch('/api/content?type=achievement&id=' + encodeURIComponent(id), {
       method: 'DELETE',
       headers: {'x-admin-password': adminPassword}
     });
