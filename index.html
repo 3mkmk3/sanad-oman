@@ -364,9 +364,24 @@ textarea.rv-input{resize:vertical;min-height:58px;}
       <div id="featuredList"></div>
     </div>
 
+    <!-- كل الخدمات -->
+    <div id="services" class="screen">
+      <div class="backline"><button class="back" onclick="goScreen('home')">→</button><h2>كل الخدمات</h2></div>
+      <div class="grid">
+        <button class="cat hue-health" onclick="goCat('الصحة')"><span class="icon">🏥</span><strong>الصحة</strong><small>صيدليات وعيادات</small></button>
+        <button class="cat hue-car" onclick="goCat('السيارات')"><span class="icon">🚗</span><strong>السيارات</strong><small>ونش وكراج وبنشر</small></button>
+        <button class="cat hue-home" onclick="goCat('خدمات المنزل')"><span class="icon">🏠</span><strong>خدمات المنزل</strong><small>تكييف وسباكة وكهرباء</small></button>
+        <button class="cat hue-food" onclick="goCat('المطاعم والمقاهي')"><span class="icon">🍽️</span><strong>المطاعم</strong><small>أماكن قريبة ومجربة</small></button>
+        <button class="cat hue-gov" onclick="goCat('جهات مهمة')"><span class="icon">🏛️</span><strong>جهات مهمة</strong><small>بنوك ودوائر وخدمات</small></button>
+        <button class="cat hue-tour" onclick="goCat('السياحة والترفيه')"><span class="icon">🏰</span><strong>السياحة والترفيه</strong><small>معالم وفنادق ومنتزهات</small></button>
+        <button class="cat hue-gov" onclick="goCat('التسوق')"><span class="icon">🛍️</span><strong>التسوق</strong><small>أسواق ومولات ومحلات</small></button>
+        <button class="cat hue-health" onclick="goCat('مساجد')"><span class="icon">🕌</span><strong>المساجد</strong><small>جوامع ومساجد البريمي</small></button>
+      </div>
+    </div>
+
     <!-- الفئة -->
     <div id="category" class="screen">
-      <div class="backline"><button class="back" onclick="goScreen('home')">→</button><h2 id="catTitle">الخدمات</h2></div>
+      <div class="backline"><button class="back" onclick="goScreen('services')">→</button><h2 id="catTitle">الخدمات</h2></div>
       <div class="toolbar">
         <button class="chip active" onclick="setFilter('all',this)">الكل</button>
         <button class="chip" onclick="setFilter('موثق',this)">موثق</button>
@@ -628,7 +643,7 @@ textarea.rv-input{resize:vertical;min-height:58px;}
 
   <nav class="nav">
     <button class="nav-btn active" onclick="goScreen('home')">🏠<span>الرئيسية</span></button>
-    <button class="nav-btn" onclick="goCat('الصحة')">🔍<span>الخدمات</span></button>
+    <button class="nav-btn" onclick="goScreen('services')">🔍<span>الخدمات</span></button>
     <button class="nav-btn nav-ai" onclick="goScreen('ai')">🤖<span>جدولي</span></button>
     <button class="nav-btn" onclick="goScreen('alerts')">🔔<span>تنبيهات</span></button>
     <button class="nav-btn" onclick="goScreen('more')">⋯<span>المزيد</span></button>
@@ -842,7 +857,7 @@ function goScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  const map = {home:0, category:1, ai:2, alerts:3, more:4};
+  const map = {home:0, services:1, category:1, ai:2, alerts:3, more:4};
   if (map[id] !== undefined) document.querySelectorAll('.nav-btn')[map[id]].classList.add('active');
   closeSR();
   const content = document.querySelector('.content');
@@ -1794,9 +1809,19 @@ async function sendAsk() {
 const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
 let askRec = null;
 
+const MIC_NOTICE_KEY = 'sanad_mic_notice_seen';
+
 function toggleAskMic() {
   const btn = document.getElementById('askMicBtn');
   if (askRec) { try { askRec.stop(); } catch (err) {} return; }
+
+  // ملاحظة تُعرض قبل طلب إذن المتصفح — مرة واحدة فقط لكل جهاز
+  if (!localStorage.getItem(MIC_NOTICE_KEY)) {
+    const ok = confirm('سيطلب المتصفح إذن استخدام الميكروفون لتحويل حديثك إلى نص. لا يُسجَّل صوتك ولا يُحفظ في أي مكان.\n\nهل تريد المتابعة؟');
+    localStorage.setItem(MIC_NOTICE_KEY, '1');
+    if (!ok) return;
+  }
+
   try {
     askRec = new SpeechRec();
     askRec.lang = 'ar-OM';
@@ -1806,7 +1831,20 @@ function toggleAskMic() {
       if (t) { document.getElementById('askInput').value = t; sendAsk(); }
     };
     askRec.onend = () => { askRec = null; btn.classList.remove('rec'); };
-    askRec.onerror = () => { askRec = null; btn.classList.remove('rec'); };
+    askRec.onerror = e => {
+      askRec = null;
+      btn.classList.remove('rec');
+      const reason = e && e.error;
+      if (reason === 'not-allowed' || reason === 'permission-denied' || reason === 'service-not-allowed') {
+        addAskBubble('ai', '🎤 تم رفض إذن الميكروفون. لتفعيله: افتح إعدادات الموقع من متصفحك واسمح باستخدام الميكروفون، ثم حاول مرة أخرى.');
+      } else if (reason === 'no-speech') {
+        addAskBubble('ai', '🎤 لم أسمع أي صوت، اضغط المايك وتحدث مرة أخرى.');
+      } else if (reason === 'audio-capture') {
+        addAskBubble('ai', '🎤 تعذر الوصول للميكروفون — تأكد أن جهازك يملك ميكروفون متصل.');
+      } else if (reason && reason !== 'aborted') {
+        addAskBubble('ai', '🎤 تعذر استخدام الميكروفون الآن، حاول مرة أخرى.');
+      }
+    };
     btn.classList.add('rec');
     askRec.start();
   } catch (err) {
