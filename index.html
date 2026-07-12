@@ -792,7 +792,6 @@ function photoUrl(p) {
 const CAT_ICONS = {'الصحة':'🏥','السيارات':'🚗','المطاعم والمقاهي':'🍽️','خدمات المنزل':'🏠','جهات مهمة':'🏛️','السياحة والترفيه':'🏰','التسوق':'🛍️','مساجد':'🕌'};
 const PLACE_LOGOS = {
   12: 'https://assets.oq.com/dist/images/oq-logo.svg?v=b392d8916ca8d1a12d5b90e318209933',
-  23: 'https://upload.wikimedia.org/wikipedia/en/d/d1/ROP_-_Logo.jpg',
   24: 'https://upload.wikimedia.org/wikipedia/en/6/65/Bank_Muscat_logo.svg',
   143: 'https://upload.wikimedia.org/wikipedia/commons/a/ab/Lulu_Hypermarket_logo.png'
 };
@@ -801,9 +800,11 @@ function logoUrl(p) {
 }
 function avatar(p) {
   const logo = logoUrl(p);
-  const src = logo || photoUrl(p);
+  const photo = safeImage(p.photo);
+  const src = logo || photo;
   const cls = logo ? 'av-img brand-logo-img' : 'av-img';
-  return `<div class="av logo-tile"><span class="logo-fallback">${CAT_ICONS[p.cat] || esc(p.name[0])}</span><img class="${cls}" src="${src}" alt="" onerror="this.remove()"/></div>`;
+  const img = src ? `<img class="${cls}" src="${src}" alt="" onerror="this.remove()"/>` : '';
+  return `<div class="av logo-tile"><span class="logo-fallback">${CAT_ICONS[p.cat] || esc(p.name[0])}</span>${img}</div>`;
 }
 function placeCard(p) {
   const dist = distanceBadge(p);
