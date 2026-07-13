@@ -85,6 +85,8 @@ body.welcome-open{overflow:hidden;}
 .badge-red{background:var(--red);color:#fff;padding:4px 11px;border-radius:99px;font-size:11px;box-shadow:0 3px 8px rgba(192,69,63,.3);}
 .ai-btn{background:linear-gradient(135deg,#f4f1fc,#ece7fa);border:1px solid var(--ai-line);grid-column:1/-1;flex-direction:row!important;min-height:58px!important;align-items:center!important;gap:11px;justify-content:flex-start;padding:0 14px!important;}
 .ai-btn .icon{background:#e6e0f8;}
+.achv-btn{background:linear-gradient(135deg,var(--green-lt),#eef7f2);border:1px solid #cfe6dd;grid-column:1/-1;flex-direction:row!important;min-height:58px!important;align-items:center!important;gap:11px;justify-content:flex-start;padding:0 14px!important;}
+.achv-btn .icon{background:#d9f0e6;}
 .ai-btn strong{color:var(--ai);}
 .ai-btn small{color:#8d7fd6;}
 .ai-new{margin-right:auto;background:linear-gradient(135deg,var(--ai),#8a76e8);color:#fff;padding:4px 11px;border-radius:99px;font-size:11px;font-weight:700;box-shadow:0 3px 10px rgba(109,91,208,.35);}
@@ -394,14 +396,9 @@ textarea.rv-input{resize:vertical;min-height:58px;}
     <div id="home" class="screen active">
       <div class="grid">
         <button class="emg" onclick="goScreen('emergency')"><span>🆘 الطوارئ</span><span class="badge-red">اتصال سريع</span></button>
-        <button class="cat hue-health" onclick="goCat('الصحة')"><span class="icon">🏥</span><strong>الصحة</strong><small>صيدليات وعيادات</small></button>
-        <button class="cat hue-car" onclick="goCat('السيارات')"><span class="icon">🚗</span><strong>السيارات</strong><small>ونش وكراج وبنشر</small></button>
         <button class="cat hue-home" onclick="goCat('خدمات المنزل')"><span class="icon">🏠</span><strong>خدمات المنزل</strong><small>تكييف وسباكة وكهرباء</small></button>
-        <button class="cat hue-food" onclick="goCat('المطاعم والمقاهي')"><span class="icon">🍽️</span><strong>المطاعم</strong><small>أماكن قريبة ومجربة</small></button>
         <button class="cat hue-gov" onclick="goCat('جهات مهمة')"><span class="icon">🏛️</span><strong>جهات مهمة</strong><small>بنوك ودوائر وخدمات</small></button>
-        <button class="cat hue-tour" onclick="goCat('السياحة والترفيه')"><span class="icon">🏰</span><strong>السياحة والترفيه</strong><small>معالم وفنادق ومنتزهات</small></button>
-        <button class="cat hue-gov" onclick="goCat('التسوق')"><span class="icon">🛍️</span><strong>التسوق</strong><small>أسواق ومولات ومحلات</small></button>
-        <button class="cat hue-health" onclick="goCat('مساجد')"><span class="icon">🕌</span><strong>المساجد</strong><small>جوامع ومساجد البريمي</small></button>
+        <button class="cat achv-btn" onclick="goScreen('achievements')"><span class="icon">🏗️</span><strong>إنجازات المحافظة</strong><small>طرق ومشاريع وتطويرات في البريمي</small></button>
         <button class="cat ai-btn" onclick="goScreen('ai')"><span class="icon">🤖</span><strong>جدولي السياحي</strong><small>ذكاء اصطناعي يخطط لك</small><span class="ai-new">جديد</span></button>
       </div>
       <div class="sec-title"><h2>الأكثر احتياجاً اليوم</h2><small>البريمي</small></div>
@@ -503,7 +500,7 @@ textarea.rv-input{resize:vertical;min-height:58px;}
 
     <!-- إنجازات المحافظة -->
     <div id="achievements" class="screen">
-      <div class="backline"><button class="back" onclick="goScreen('more')">→</button><h2>🏗️ إنجازات المحافظة</h2></div>
+      <div class="backline"><button class="back" onclick="goScreen('home')">→</button><h2>🏗️ إنجازات المحافظة</h2></div>
       <div id="achvStats" class="achv-stats"></div>
       <div class="toolbar">
         <button class="chip active" onclick="setAchvFilter('all',this)">الكل</button>
@@ -977,7 +974,7 @@ function goScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  const map = {home:0, services:1, category:1, ai:2, alerts:3, more:4, achievements:4};
+  const map = {home:0, services:1, category:1, ai:2, alerts:3, more:4, achievements:0};
   if (map[id] !== undefined) document.querySelectorAll('.nav-btn')[map[id]].classList.add('active');
   closeSR();
   const content = document.querySelector('.content');
