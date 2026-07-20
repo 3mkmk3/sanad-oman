@@ -317,7 +317,9 @@ async function handlePlace(req, res, key, searchText) {
           'internationalPhoneNumber',
           'regularOpeningHours.weekdayDescriptions',
           'iconMaskBaseUri',
-          'iconBackgroundColor'
+          'iconBackgroundColor',
+          'formattedAddress',
+          'location'
         ].join(',')
       }
     });
@@ -361,6 +363,10 @@ async function handlePlace(req, res, key, searchText) {
         : [],
       iconMaskBaseUri: safeUrl(place.iconMaskBaseUri),
       iconBackgroundColor: clean(place.iconBackgroundColor, 20),
+      address: clean(place.formattedAddress, 200),
+      location: place.location && typeof place.location.latitude === 'number'
+        ? { lat: place.location.latitude, lng: place.location.longitude }
+        : null,
       reviews,
       reviewsUnavailableReason: !reviews.length && userRatingCount
         ? (legacyStatus === 'REQUEST_DENIED' ? 'legacy_api_disabled' : 'not_returned_by_google')
