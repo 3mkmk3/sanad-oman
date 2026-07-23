@@ -5,7 +5,7 @@
 // POST action=review (مشرف فقط): قبول/رفض طلب
 // POST action=unpublish (مشرف فقط): إزالة نشاط معتمد من القائمة العامة
 import { lrangeAll, lset, lpush, del, get, rateLimit } from './_kv.js';
-import { isAuthorized } from './_auth.js';
+import { isAuthorized, adminConfigured } from './_auth.js';
 
 function clean(v, max) {
   return typeof v === 'string' ? v.trim().slice(0, max) : '';
@@ -22,6 +22,10 @@ function cleanPhoto(v) {
 }
 
 async function listRequests(req, res) {
+  // إن لم تُضبط كلمة المرور على الخادم أصلاً، أبلغ الواجهة بوضوح بدل "خطأ في كلمة المرور"
+  if (!adminConfigured()) {
+    return res.status(503).json({ error: 'not_configured' });
+  }
   // حماية من تخمين كلمة المرور: 15 محاولة خاطئة تقفل الدخول ساعة كاملة
   const ip = ((req.headers['x-forwarded-for'] || '').split(',')[0] || '').trim() || 'unknown';
   try {

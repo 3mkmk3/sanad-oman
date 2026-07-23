@@ -684,7 +684,7 @@ textarea.rv-input{resize:vertical;min-height:58px;}
         <div class="al-badge">🔐</div>
         <h3>تسجيل دخول المشرف</h3>
         <p>أدخل كلمة المرور للوصول للوحة التحكم</p>
-        <input id="adminPass" class="admin-pass" type="password" placeholder="كلمة المرور"/>
+        <input id="adminPass" class="admin-pass" type="password" placeholder="كلمة المرور" onkeydown="if(event.key==='Enter')adminLogin()"/>
         <button class="login-btn" onclick="adminLogin()">دخول</button>
         <p id="loginErr" style="color:#dc2626;font-size:12px;text-align:center;margin-top:8px;display:none">كلمة المرور خاطئة</p>
       </div>
@@ -1578,13 +1578,35 @@ async function submitRequest() {
 }
 
 // ===== لوحة التحكم =====
+// نُرمّز كلمة المرور بـ base64 (UTF-8) قبل وضعها في ترويسة HTTP —
+// لأن الترويسات لا تقبل الأحرف العربية أو الرموز، وإرسالها خاماً يفشل قبل أن يصل الطلب للخادم.
+function encPass(p) {
+  try { return btoa(unescape(encodeURIComponent(p))); } catch (e) { return ''; }
+}
+
+function showLoginErr(msg) {
+  const el = document.getElementById('loginErr');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
 async function adminLogin() {
-  const pass = document.getElementById('adminPass').value;
+  const raw = document.getElementById('adminPass').value;
+  if (!raw) { showLoginErr('أدخل كلمة المرور'); return; }
+  const enc = encPass(raw);
   try {
-    const res = await fetch('/api/business', { headers: {'x-admin-password': pass} });
+    const res = await fetch('/api/business', { headers: {'x-admin-password': enc} });
+    if (res.status === 503) {
+      showLoginErr('كلمة المرور غير مضبوطة على الخادم. اضبط ADMIN_PASSWORD في Vercel لبيئة Production ثم أعد النشر (Redeploy).');
+      return;
+    }
+    if (res.status === 429) {
+      showLoginErr('محاولات كثيرة خاطئة. انتظر ساعة ثم حاول مجدداً.');
+      return;
+    }
     if (!res.ok) throw new Error();
     const data = await res.json();
-    adminPassword = pass;
+    adminPassword = enc; // نخزّن النسخة المُرمّزة — باقي طلبات المشرف ترسلها كما هي
     requests = data.requests || [];
     document.getElementById('adminLogin').style.display = 'none';
     document.getElementById('adminPanel').style.display = 'block';
@@ -1594,7 +1616,7 @@ async function adminLogin() {
     loadAdminAlerts();
     loadAdminAchievements();
   } catch (err) {
-    document.getElementById('loginErr').style.display = 'block';
+    showLoginErr('كلمة المرور خاطئة');
     document.getElementById('adminPass').value = '';
   }
 }
