@@ -277,11 +277,18 @@ textarea.rv-input{resize:vertical;min-height:58px;}
 
 /* ===== المزيد ===== */
 .more-list{background:var(--card);border-radius:20px;border:1px solid rgba(230,235,232,.7);overflow:hidden;box-shadow:var(--shadow-sm);}
-.more-item{display:flex;gap:13px;align-items:center;padding:16px;border-bottom:1px solid var(--line);font-size:21px;transition:background .15s;}
-.more-item:hover{background:#fafcfa;}
+.more-item{display:flex;gap:13px;align-items:center;padding:14px 15px;border-bottom:1px solid var(--line);transition:background .15s;}
+.more-item[onclick]{cursor:pointer;}
+.more-item[onclick]:hover{background:#fafcfa;}
+.more-item[onclick]:active{background:var(--soft);}
 .more-item:last-child{border-bottom:none;}
+.more-item .mi-ico{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:21px;background:var(--soft);flex-shrink:0;}
+.more-item .mi-ico.g-gold{background:var(--gold-lt);}
+.more-item .mi-ico.g-green{background:var(--green-lt);}
+.more-item .mi-ico.g-blue{background:#e8eefa;}
 .more-item div strong{display:block;font-size:14px;}
-.more-item div small{color:var(--muted);font-size:12px;}
+.more-item div small{color:var(--muted);font-size:12px;line-height:1.5;}
+.more-item .mi-arrow{margin-right:auto;color:var(--green);font-size:20px;opacity:.55;flex-shrink:0;}
 
 /* ===== شريط التنقل ===== */
 .nav{position:sticky;bottom:0;background:rgba(255,255,255,.92);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:7px 5px calc(7px + env(safe-area-inset-bottom));backdrop-filter:blur(14px);flex-shrink:0;box-shadow:0 -6px 24px rgba(31,42,39,.05);}
@@ -327,31 +334,55 @@ textarea.rv-input{resize:vertical;min-height:58px;}
 .success-box p{font-size:13px;color:var(--muted);line-height:1.6;}
 
 /* ===== لوحة التحكم ===== */
-.admin-login{padding:20px 0;}
-.admin-login .al-icon{font-size:44px;text-align:center;margin-bottom:10px;}
-.admin-login h3{text-align:center;font-size:18px;margin-bottom:4px;font-weight:800;}
-.admin-login p{text-align:center;font-size:13px;color:var(--muted);margin-bottom:18px;}
+.admin-login{max-width:344px;margin:26px auto 0;padding:30px 24px 26px;background:var(--card);border:1px solid rgba(230,235,232,.8);border-radius:26px;box-shadow:var(--shadow-md);text-align:center;}
+.admin-login .al-badge{width:66px;height:66px;margin:0 auto 15px;border-radius:21px;background:linear-gradient(145deg,var(--green-deep),var(--green));color:#fff;display:grid;place-items:center;font-size:29px;box-shadow:0 12px 28px rgba(15,110,92,.3);border:1px solid rgba(255,255,255,.14);}
+.admin-login h3{font-size:19px;margin-bottom:5px;font-weight:800;}
+.admin-login p{font-size:12.5px;color:var(--muted);margin-bottom:20px;line-height:1.6;}
+.admin-pass{width:100%;padding:13px 15px;border-radius:14px;border:1.5px solid var(--line);font:inherit;font-size:14px;text-align:center;outline:none;margin-bottom:11px;transition:border .2s,box-shadow .2s;}
+.admin-pass:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(15,110,92,.1);}
+.login-btn{width:100%;padding:13px;border-radius:14px;background:linear-gradient(135deg,#0b5346,#17836d);color:#fff;font-size:14px;font-weight:800;box-shadow:0 6px 16px rgba(15,110,92,.26);transition:transform .15s;}
+.login-btn:active{transform:scale(.98);}
+
 .admin-panel{display:none;}
-.panel-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:16px;}
-.stat-card{background:var(--card);border:1px solid rgba(230,235,232,.7);border-radius:16px;padding:13px;text-align:center;box-shadow:var(--shadow-sm);}
-.stat-card .sn{font-size:22px;font-weight:800;color:var(--green);}
-.stat-card .sl{font-size:11px;color:var(--muted);margin-top:2px;}
-.req-card{background:var(--card);border:1px solid rgba(230,235,232,.7);border-radius:17px;padding:14px;margin-bottom:10px;box-shadow:var(--shadow-sm);}
-.req-card .rq-name{font-size:15px;font-weight:800;margin-bottom:3px;}
-.req-card .rq-meta{font-size:12px;color:var(--muted);margin-bottom:8px;}
-.req-card .rq-detail{font-size:12px;color:var(--ink);margin-bottom:10px;line-height:1.6;background:#f4f7f5;border-radius:12px;padding:10px;}
+.admin-bar{display:flex;align-items:center;gap:12px;background:linear-gradient(145deg,#0b5346,#17836d);color:#fff;border-radius:20px;padding:14px 15px;margin-bottom:16px;box-shadow:var(--shadow-md);position:relative;overflow:hidden;}
+.admin-bar::before{content:'';position:absolute;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.06);top:-56px;left:-30px;pointer-events:none;}
+.admin-bar .ab-mark{width:42px;height:42px;border-radius:13px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.26);display:grid;place-items:center;font-size:20px;flex-shrink:0;position:relative;z-index:1;}
+.admin-bar .ab-txt{position:relative;z-index:1;min-width:0;}
+.admin-bar .ab-title{font-size:15.5px;font-weight:800;}
+.admin-bar .ab-sub{font-size:11px;opacity:.82;margin-top:1px;}
+.logout-btn{margin-right:auto;position:relative;z-index:1;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:12px;font-weight:800;padding:9px 15px;border-radius:12px;flex-shrink:0;transition:background .15s;}
+.logout-btn:active{background:rgba(255,255,255,.3);}
+
+.panel-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:6px;}
+.stat-card{position:relative;background:var(--card);border:1px solid rgba(230,235,232,.8);border-radius:17px;padding:14px 8px 12px;text-align:center;box-shadow:var(--shadow-sm);overflow:hidden;}
+.stat-card::before{content:'';position:absolute;top:0;right:0;left:0;height:3px;background:var(--green);opacity:.85;}
+.stat-card.s-pending::before{background:var(--gold);}
+.stat-card.s-approved::before{background:#1fa855;}
+.stat-card .si{font-size:16px;margin-bottom:1px;opacity:.9;}
+.stat-card .sn{font-size:23px;font-weight:800;color:var(--green);line-height:1.15;}
+.stat-card.s-pending .sn{color:#b07a24;}
+.stat-card.s-approved .sn{color:#178a48;}
+.stat-card .sl{font-size:10.5px;color:var(--muted);margin-top:3px;font-weight:600;}
+
+.section-label{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:800;margin:22px 2px 11px;color:var(--ink);}
+.section-label .sl-ico{width:31px;height:31px;border-radius:10px;display:grid;place-items:center;font-size:15px;background:var(--soft);flex-shrink:0;}
+.section-label .sl-count{margin-right:auto;background:#eef3f1;color:var(--muted);font-size:11px;font-weight:800;padding:3px 11px;border-radius:99px;min-width:27px;text-align:center;}
+
+.req-card{position:relative;background:var(--card);border:1px solid rgba(230,235,232,.75);border-radius:17px;padding:14px;margin-bottom:10px;box-shadow:var(--shadow-sm);}
+.req-card.rc-pending{border-color:#efdcb0;background:linear-gradient(180deg,#fffdf7,#fff);}
+.req-card .rq-name{font-size:15px;font-weight:800;margin-bottom:4px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+.req-card .rq-meta{font-size:12px;color:var(--muted);margin-bottom:9px;}
+.req-card .rq-detail{font-size:12px;color:var(--ink);margin-bottom:11px;line-height:1.75;background:#f4f7f5;border:1px solid var(--line);border-radius:12px;padding:11px 12px;}
 .req-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.approve-btn{padding:10px;border-radius:12px;background:var(--green);color:#fff;font-size:13px;font-weight:800;box-shadow:0 4px 12px rgba(15,110,92,.22);}
-.reject-btn{padding:10px;border-radius:12px;background:var(--rose-bg);color:#96322d;font-size:13px;font-weight:800;border:1px solid var(--rose-line);}
+.approve-btn{padding:11px;border-radius:12px;background:var(--green);color:#fff;font-size:13px;font-weight:800;box-shadow:0 4px 12px rgba(15,110,92,.22);transition:transform .15s;}
+.approve-btn:active{transform:scale(.97);}
+.reject-btn{padding:11px;border-radius:12px;background:var(--rose-bg);color:#96322d;font-size:13px;font-weight:800;border:1px solid var(--rose-line);transition:transform .15s;}
+.reject-btn:active{transform:scale(.97);}
 .status-pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700;}
 .status-pill.pending{background:#fdf3dc;color:#8a6420;}
 .status-pill.approved{background:var(--green-lt);color:var(--green-deep);}
 .status-pill.rejected{background:var(--rose-bg);color:#96322d;}
-.admin-pass{width:100%;padding:12px 14px;border-radius:13px;border:1.5px solid var(--line);font:inherit;font-size:13px;outline:none;margin-bottom:10px;transition:border .2s,box-shadow .2s;}
-.admin-pass:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(15,110,92,.1);}
-.login-btn{width:100%;padding:13px;border-radius:14px;background:var(--green);color:#fff;font-size:14px;font-weight:800;box-shadow:0 4px 14px rgba(15,110,92,.25);}
-.section-label{font-size:14px;font-weight:800;margin:14px 0 8px;color:var(--ink);}
-.empty-req{text-align:center;padding:30px;color:var(--muted);font-size:13px;}
+.empty-req{text-align:center;padding:26px 20px;color:var(--muted);font-size:12.5px;background:var(--card);border:1px dashed #d7e0dc;border-radius:16px;}
 
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;}}
 @media(min-width:520px){.app{min-height:844px;border-radius:40px;box-shadow:0 34px 100px rgba(11,50,40,.22);margin:28px 0;overflow:hidden;}}
@@ -517,18 +548,18 @@ textarea.rv-input{resize:vertical;min-height:58px;}
     <div id="more" class="screen">
       <div class="backline"><button class="back" onclick="goScreen('home')">→</button><h2>المزيد</h2></div>
       <div class="more-list">
-        <div class="more-item" onclick="goScreen('achievements')" style="cursor:pointer">
-          <span>🏗️</span>
+        <div class="more-item" onclick="goScreen('achievements')">
+          <span class="mi-ico g-green">🏗️</span>
           <div><strong>إنجازات المحافظة</strong><small>طرق ومشاريع وتطويرات في البريمي</small></div>
-          <span style="color:var(--green);font-size:18px">›</span>
+          <span class="mi-arrow">›</span>
         </div>
-        <div class="more-item" onclick="goScreen('register')" style="cursor:pointer">
-          <span>🏪</span>
+        <div class="more-item" onclick="goScreen('register')">
+          <span class="mi-ico g-gold">🏪</span>
           <div><strong>سجّل نشاطك التجاري</strong><small>أضف محلك أو خدمتك في التطبيق — مجاناً الآن</small></div>
-          <span style="color:var(--green);font-size:18px">›</span>
+          <span class="mi-arrow">›</span>
         </div>
-        <div class="more-item"><span>📲</span><div><strong>ثبّت التطبيق</strong><small>اضغط "إضافة للشاشة الرئيسية" من المتصفح</small></div></div>
-        <div class="more-item"><span>📍</span><div><strong>البريمي، سلطنة عُمان</strong><small>نسخة 1.0 — تجريبية</small></div></div>
+        <div class="more-item"><span class="mi-ico g-blue">📲</span><div><strong>ثبّت التطبيق</strong><small>اضغط "إضافة للشاشة الرئيسية" من المتصفح</small></div></div>
+        <div class="more-item"><span class="mi-ico">📍</span><div><strong>البريمي، سلطنة عُمان</strong><small>نسخة 1.0 — تجريبية</small></div></div>
       </div>
     </div>
 
@@ -650,7 +681,7 @@ textarea.rv-input{resize:vertical;min-height:58px;}
       <div class="backline"><button class="back" onclick="goScreen('more')">→</button><h2>⚙️ لوحة التحكم</h2></div>
 
       <div id="adminLogin" class="admin-login">
-        <div class="al-icon">🔐</div>
+        <div class="al-badge">🔐</div>
         <h3>تسجيل دخول المشرف</h3>
         <p>أدخل كلمة المرور للوصول للوحة التحكم</p>
         <input id="adminPass" class="admin-pass" type="password" placeholder="كلمة المرور"/>
@@ -659,22 +690,31 @@ textarea.rv-input{resize:vertical;min-height:58px;}
       </div>
 
       <div id="adminPanel" class="admin-panel">
-        <div class="panel-stats">
-          <div class="stat-card"><div class="sn" id="statTotal">0</div><div class="sl">إجمالي الطلبات</div></div>
-          <div class="stat-card"><div class="sn" id="statPending" style="color:#b07a24">0</div><div class="sl">بانتظار المراجعة</div></div>
-          <div class="stat-card"><div class="sn" id="statApproved">0</div><div class="sl">تم القبول</div></div>
+        <div class="admin-bar">
+          <div class="ab-mark">⚙️</div>
+          <div class="ab-txt">
+            <div class="ab-title">لوحة تحكم المشرف</div>
+            <div class="ab-sub">سند عمان — البريمي</div>
+          </div>
+          <button class="logout-btn" onclick="adminLogout()">↩ خروج</button>
         </div>
 
-        <div class="section-label">🕐 طلبات بانتظار المراجعة</div>
+        <div class="panel-stats">
+          <div class="stat-card"><div class="si">📋</div><div class="sn" id="statTotal">0</div><div class="sl">إجمالي الطلبات</div></div>
+          <div class="stat-card s-pending"><div class="si">⏳</div><div class="sn" id="statPending">0</div><div class="sl">بانتظار المراجعة</div></div>
+          <div class="stat-card s-approved"><div class="si">✅</div><div class="sn" id="statApproved">0</div><div class="sl">تم القبول</div></div>
+        </div>
+
+        <div class="section-label"><span class="sl-ico">🕐</span>طلبات بانتظار المراجعة<span class="sl-count" id="cntPending">0</span></div>
         <div id="pendingList"></div>
 
-        <div class="section-label">✅ طلبات تمت مراجعتها</div>
+        <div class="section-label"><span class="sl-ico">📋</span>طلبات تمت مراجعتها<span class="sl-count" id="cntReviewed">0</span></div>
         <div id="reviewedList"></div>
 
-        <div class="section-label">⭐ آخر التقييمات</div>
+        <div class="section-label"><span class="sl-ico">⭐</span>آخر التقييمات<span class="sl-count" id="cntReviews">0</span></div>
         <div id="adminReviews"></div>
 
-        <div class="section-label">🔔 إدارة التنبيهات</div>
+        <div class="section-label"><span class="sl-ico">🔔</span>إدارة التنبيهات<span class="sl-count" id="cntAlerts">0</span></div>
         <div class="d-card" style="margin-bottom:12px">
           <div class="field-group">
             <label>عنوان التنبيه *</label>
@@ -696,7 +736,7 @@ textarea.rv-input{resize:vertical;min-height:58px;}
         </div>
         <div id="adminAlerts"></div>
 
-        <div class="section-label">🏗️ إدارة إنجازات المحافظة</div>
+        <div class="section-label"><span class="sl-ico">🏗️</span>إدارة إنجازات المحافظة<span class="sl-count" id="cntAchv">0</span></div>
         <div class="d-card" style="margin-bottom:12px">
           <div class="field-group">
             <label>عنوان الإنجاز *</label>
@@ -1559,6 +1599,20 @@ async function adminLogin() {
   }
 }
 
+function adminLogout() {
+  adminPassword = '';
+  requests = [];
+  document.getElementById('adminPanel').style.display = 'none';
+  document.getElementById('adminLogin').style.display = 'block';
+  document.getElementById('adminPass').value = '';
+  document.getElementById('loginErr').style.display = 'none';
+}
+
+function setCount(id, n) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = n;
+}
+
 function renderAdminPanel() {
   const pending  = requests.filter(r => r.status === 'pending');
   const reviewed = requests.filter(r => r.status !== 'pending');
@@ -1566,6 +1620,8 @@ function renderAdminPanel() {
   document.getElementById('statTotal').textContent   = requests.length;
   document.getElementById('statPending').textContent  = pending.length;
   document.getElementById('statApproved').textContent = requests.filter(r => r.status === 'approved').length;
+  setCount('cntPending', pending.length);
+  setCount('cntReviewed', reviewed.length);
 
   const pendingEl = document.getElementById('pendingList');
   pendingEl.innerHTML = pending.length
@@ -1596,7 +1652,7 @@ function reqCard(r, showActions) {
            </div>`
         : '');
   return `
-    <div class="req-card" id="req_${esc(r.id)}">
+    <div class="req-card ${r.status === 'pending' ? 'rc-pending' : ''}" id="req_${esc(r.id)}">
       <div class="rq-name">${esc(r.name)} ${statusMap[r.status] || ''}</div>
       <div class="rq-meta">${esc(r.cat)} · ${esc(r.type)} · ${esc(r.area)} · ${esc(r.date)}</div>
       ${safeImage(r.photo) ? `<img src="${esc(r.photo)}" alt="" style="width:100%;max-height:150px;object-fit:cover;border-radius:12px;margin-bottom:8px" onerror="this.remove()"/>` : ''}
@@ -1669,6 +1725,7 @@ async function loadAdminReviews() {
 
 function renderAdminReviews() {
   const el = document.getElementById('adminReviews');
+  setCount('cntReviews', adminReviewsList.length);
   el.innerHTML = adminReviewsList.length
     ? adminReviewsList.slice(0, 20).map(r => `
       <div class="req-card">
@@ -1739,6 +1796,7 @@ async function loadAdminAlerts() {
 
 function renderAdminAlerts() {
   const el = document.getElementById('adminAlerts');
+  setCount('cntAlerts', adminAlertsList.length);
   el.innerHTML = adminAlertsList.length
     ? adminAlertsList.map(a => `
       <div class="req-card">
@@ -1862,6 +1920,7 @@ async function loadAdminAchievements() {
 
 function renderAdminAchievements() {
   const el = document.getElementById('adminAchievements');
+  setCount('cntAchv', adminAchievementsList.length);
   el.innerHTML = adminAchievementsList.length
     ? adminAchievementsList.map(a => `
       <div class="req-card">
